@@ -132,10 +132,10 @@ function createWall(scene,from , to, nbWall, tron){
     wall.checkCollisions = true;
     wall.position = new BABYLON.Vector3(from.x+(diffX / 2)  , 2, from.z +(diffZ / 2) ); 
     wall.rotation.y = angle;
-    wall.visibility = 0.5;
+    //wall.visibility = 0.5;
 
     let WallMaterial = new BABYLON.StandardMaterial("wallMaterial", scene);
-    WallMaterial.diffuseColor  = new BABYLON.Color3.Yellow;
+    //WallMaterial.diffuseColor  = new BABYLON.Color3.Yellow;
 
     wall.material = WallMaterial
     //walls = BABYLON.Mesh.MergeMeshes([walls,wall]);
