@@ -26,18 +26,22 @@ function startGame() {
     let lastDate = Date.now();
     engine.runRenderLoop(() => {
         currentDate = Date.now();
-        //let deltaTime = engine.getDeltaTime(); // remind you something ?
+        let deltaTime = engine.getDeltaTime(); // remind you something ?
         let tron = scene.getMeshByName("tron");
         if(tron){
             let followCamera = createFollowCamera(scene, tron);
+            
             engine.registerView(document.getElementById("myCanvas"), followCamera);
             engine.registerView(document.getElementById("camera"), cameraMap);
             //scene.activeCamera = followCamera;
             tron.move();
 
             if(currentDate-lastDate > 300){
+                tron.score += 1 ;
                 tron.wall();
                 lastDate=currentDate;
+                printFPS(deltaTime);
+                printScore(tron.score);
             }
             //tron.wall(scene);
         }
@@ -132,10 +136,10 @@ function createWall(scene,from , to, nbWall, tron){
     wall.checkCollisions = true;
     wall.position = new BABYLON.Vector3(from.x+(diffX / 2)  , 2, from.z +(diffZ / 2) ); 
     wall.rotation.y = angle;
-    //wall.visibility = 0.5;
+    wall.visibility = 0.5;
 
     let WallMaterial = new BABYLON.StandardMaterial("wallMaterial", scene);
-    //WallMaterial.diffuseColor  = new BABYLON.Color3.Yellow;
+    WallMaterial.diffuseColor  = new BABYLON.Color3.Yellow;
 
     wall.material = WallMaterial
     //walls = BABYLON.Mesh.MergeMeshes([walls,wall]);
@@ -237,6 +241,9 @@ function createTron(scene) {
             tron.frontVector = new BABYLON.Vector3(0, 0, 1);
             tron.checkCollisions = true;
            
+            tron.score = 0 ;
+            tron.highScore = 0;
+
             tron.lastPos = new BABYLON.Vector3(tron.x-3*tron.frontVector.x, tron.y, tron.z-3*tron.frontVector.z);
             tron.loose = false;
             tron.wall = (scene) => {
@@ -266,10 +273,12 @@ function createTron(scene) {
                     }
                     if( timeElapsedDuringJump > 5000){
                         tron.jumpAvailable = true;
+                        document.getElementById("JUMP").src = "images/JUMP_ENABLE.png";
                     }
                 }else{
                     if(inputStates.space){
                         tron.jumpAvailable = false;
+                        document.getElementById("JUMP").src = "images/JUMP_DISABLE.png";
                         tron.jumpTimer = currentDate;
                         jumpTron(tron);
                     }
@@ -327,6 +336,11 @@ function resetTron(tron){
     walls = [];
     walls.push(createBaseWall());
     tron.loose = true ;
+    if(tron.highScore < tron.score){
+        tron.highScore = tron.score;
+    }
+    tron.score = 0
+    printHScore(tron.highScore);
 }
 
 function jumpTron(tron){
@@ -405,5 +419,19 @@ function modifySettings() {
            inputStates.space = false;
         }
     }, false);
+}
+
+function printFPS(deltaTime){
+    let FPS = document.querySelector("#FPS");
+    FPS.innerHTML = Math.floor(1000/deltaTime);
+}
+
+function printScore(score){
+    let scorehtml = document.querySelector("#score");
+    scorehtml.innerHTML = score;
+}
+function printHScore(highScore){
+    let highScorehtml = document.querySelector("#HS");
+    highScorehtml.innerHTML = highScore;
 }
 

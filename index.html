@@ -7,7 +7,17 @@
         <script type="module" src="js/main.js"></script>
     </head>
     <body>
-        <canvas id="myCanvas" width=3000 height=3000></canvas>
-        <canvas id="camera" width=300 height=300></canvas>
+        <div class="myGame">
+            <div id="infoText">
+		        <p>FPS : <span id="FPS"> NaN</span> /s</p>
+		        <p>SCORE : <span id="SCORE">NaN</span> points</p>
+                <p>HIGH SCORE : <span id="HS">NaN</span> points</p>
+                <img src="images/JUMP_DISABLE.png" id="JUMP" width="50" height="50">
+            </div>
+            <canvas id="myCanvas" width=3000 height=3000></canvas>
+            <canvas id="camera" width=300 height=300></canvas>
+    
+        </div>
+        
     </body>
 </html>

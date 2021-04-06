@@ -16,3 +16,13 @@ html, body {
     background-color: black;
 }
 
+#infoText {
+    position: fixed;
+    top : 10;
+    left :10;
+    font-family: Snell Roundhand, cursive;
+    font-weight: bold;
+    color: rgb(255, 255, 255);
+
+}
+
