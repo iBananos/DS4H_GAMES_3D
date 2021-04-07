@@ -5,6 +5,8 @@ let scene;
 // vars for handling inputs
 let inputStates = {};
 let walls = [] ;
+let stadium;
+let ground;
 let cursorPlayer;
 window.onload = startGame;
 
@@ -41,14 +43,10 @@ function startGame() {
                 cameraset = true;
             }
             //scene.activeCamera = followCamera;
-            if(true){
-                
-            
-                
-                tron.move();
-                moveCursor(tron);
-                lastDateMove=currentDate;
-            }
+            tron.move(deltaTime);
+            moveCursor(tron);
+            lastDateMove=currentDate;
+
             if(currentDate-lastDateWall > 300){
                 tron.score += 1 ;
                 tron.wall();
@@ -83,8 +81,8 @@ function createScene() {
     
 
 
-
-    let ground = createGround(scene);
+    stadium = createStadium(scene);
+    ground = createGround(scene);
     let tron = createTron(scene);
     //scene.activeCamera = freeCamera;
     
@@ -97,32 +95,35 @@ function createScene() {
 }
 
 function createGround(scene) {
-    const groundOptions = { width:400, height:400, subdivisions:20, minHeight:0, maxHeight:100, onReady: onGroundCreated};
-    //scene is optional and defaults to the current scene
-    
-
-    const ground = BABYLON.SceneLoader.ImportMesh("", "models/TheArena/", "theArenabis.babylon", scene,  (newMeshes, particleSystems, skeletons) => {
-    //const ground = BABYLON.SceneLoader.ImportMesh(null, "models/", "SoccerArena.glb", scene,  (newMeshes, particleSystems, skeletons) => {
+    //const ground = BABYLON.SceneLoader.ImportMesh("", "models/TheArena/", "theArenabis.babylon", scene,  (newMeshes, particleSystems, skeletons) => {
+    //const ground = BABYLON.SceneLoader.ImportMesh("Plane.006", "models/TronFloor/", "Ground.babylon", scene,  (newMeshes, particleSystems, skeletons) => {
+    const ground = BABYLON.SceneLoader.ImportMesh("Plane", "models/TronFloor/", "GroundSansObstacle.babylon", scene,  (newMeshes, particleSystems, skeletons) => {
         let ground = newMeshes[0];
-        ground.position = new BABYLON.Vector3(-200, 0, -200); 
-        ground.scaling = new BABYLON.Vector3(1  ,1, 1);
-        ground.name = "ground";
-
-    
-        return ground;
-    });
-
-    function onGroundCreated() {
-        const groundMaterial = new BABYLON.StandardMaterial("groundMaterial", scene);
-        groundMaterial.emissiveColor = new BABYLON.Color3.Blue;
-        groundMaterial.glow = new BABYLON.GlowLayer("glow", scene, {blurKernelSize : 150});
-        groundMaterial.glow.intensity = 5;
-        ground.material = groundMaterial;
-        // to be taken into account by collision detection
         ground.checkCollisions = true;
+        ground.position = new BABYLON.Vector3(0, 0, 0); 
+        ground.scaling = new BABYLON.Vector3(9  ,9, 9);
+        ground.name = "ground";
+        // to be taken into account by collision detection
+        ground.checkCollisions = false;
         //groundMaterial.wireframe=true;
-    }
     return ground;
+    });
+}
+
+function createStadium(scene) {
+    //const ground = BABYLON.SceneLoader.ImportMesh("", "models/TheArena/", "theArenabis.babylon", scene,  (newMeshes, particleSystems, skeletons) => {
+    const stadium = BABYLON.SceneLoader.ImportMesh("Roof Shade", "models/TronStadium/", "TronArena.babylon", scene,  (newMeshes, particleSystems, skeletons) => {
+        let stadium = newMeshes[0];
+        stadium.checkCollisions = true;
+        stadium.position = new BABYLON.Vector3(0, 0, 0); 
+        stadium.scaling = new BABYLON.Vector3(4  ,2, 3);
+        stadium.name = "stadium";
+
+        // to be taken into account by collision detection
+        stadium.checkCollisions = true;
+        //groundMaterial.wireframe=true;
+    return stadium;
+    });
 }
 
 function createBaseWall(scene){
@@ -155,7 +156,7 @@ function createWall(scene,from , to, nbWall, tron){
     let WallMaterial = new BABYLON.StandardMaterial("wallMaterial", scene);
 
     WallMaterial.diffuseColor  = new BABYLON.Color3(colors[0],colors[1],colors[2]);
-    console.log(WallMaterial.diffuseColor)
+    
 
     wall.material = WallMaterial
     //walls = BABYLON.Mesh.MergeMeshes([walls,wall]);
@@ -242,10 +243,10 @@ function createFreeCamera(scene) {
 }
 
 function createCameraMap(scene) {
-    let camera = new BABYLON.FreeCamera("cameraMap", new BABYLON.Vector3(-100, 100, -100), scene);
+    let camera = new BABYLON.FreeCamera("cameraMap", new BABYLON.Vector3(0, 100, 0), scene);
     camera.layerMask = 1;
     camera.mode = BABYLON.Camera.ORTHOGRAPHIC_CAMERA;
-    camera.setTarget(new BABYLON.Vector3(-100,2,-100));
+    camera.setTarget(new BABYLON.Vector3(0,2,0));
     camera.orthoTop = 200;
     camera.orthoBottom = -200;
     camera.orthoLeft = -200;
@@ -253,7 +254,7 @@ function createCameraMap(scene) {
     //camera.position = new BABYLON.Vector3(-100,50,-100);
     camera.fov = 1;
     //camera.attachControl(canvasMap);
-    camera.viewport = new BABYLON.Viewport(0.015,0.025,0.15,0.25);
+    camera.viewport = new BABYLON.Viewport(0.015,0.025,0.20,0.35);
     camera.renderingGroupId = 1;
     return camera;
 }
@@ -277,7 +278,6 @@ let zMovement = 5;
 
 function createTron(scene) {
     BABYLON.SceneLoader.ImportMesh("", "models/Tron/", "Tron_Motorcycle.babylon", scene,  (newMeshes, particleSystems, skeletons) => {
-    //BABYLON.SceneLoader.ImportMesh("", "models/car/", "low_poly_car_blend.babylon", scene,  (newMeshes, particleSystems, skeletons) => {
             let tron = newMeshes[0];
             let tronMaterial = new BABYLON.StandardMaterial("tronMaterial", scene);
             tronMaterial.diffuseTexture = new BABYLON.Texture("models/Tron/Sphere_003_baked_EMIT.jpg");
@@ -292,13 +292,13 @@ function createTron(scene) {
             tron.jumpAvailable = false;
             tron.jumping = false ; 
             tron.jumpTimer = Date.now(); 
-            tron.position = new BABYLON.Vector3(0, 2, 0); 
+            tron.position = new BABYLON.Vector3(0, 3, 0); 
 
             tron.scaling = new BABYLON.Vector3(1  ,1, 1);
             tron.name = "tron";
             tron.nbWall= 0 ;
             tron.baseRotationZ = -1.5708
-            tron.speed = 0.5;
+            tron.speed = 0.05;
             tron.frontVector = new BABYLON.Vector3(0, 0, 1);
             tron.checkCollisions = true;
            
@@ -324,7 +324,7 @@ function createTron(scene) {
                 }
             }
 
-            tron.move = () => {
+            tron.move = (deltaTime) => {
                 let currentDate = Date.now();
                 if(!tron.jumpAvailable ){
                     let timeElapsedDuringJump = currentDate - tron.jumpTimer ;
@@ -354,8 +354,9 @@ function createTron(scene) {
                     yMovement = -2;
                 } 
                 //if(inputStates.up){
-                    if((tron.position.x + tron.speed > 100) || (tron.position.z + tron.speed > 100) || (tron.position.x + tron.speed < -300) || (tron.position.z + tron.speed < -300)){
+                    if((tron.position.x + tron.frontVector.x*2 +tron.speed > 197) || (tron.position.z + tron.frontVector.z*2 + tron.speed > 207) || (tron.position.x + tron.frontVector.x*2+ tron.speed < -197) || (tron.position.z + tron.frontVector.z*2+ tron.speed < -207)){
                         resetTron(tron);
+                        
                     }
                     for(let i = 0 ; i < walls.length ; i++){
                         if(tron.intersectsMesh(walls[i],true)){
@@ -364,7 +365,7 @@ function createTron(scene) {
                             break;
                         }
                     }
-                    tron.moveWithCollisions(tron.frontVector.multiplyByFloats(tron.speed, tron.speed, tron.speed));
+                    tron.moveWithCollisions(tron.frontVector.multiplyByFloats(tron.speed*deltaTime, tron.speed*deltaTime, tron.speed*deltaTime));
                     
                 //}
                 if(inputStates.left) {
