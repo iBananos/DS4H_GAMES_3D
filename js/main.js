@@ -7,6 +7,7 @@ let scene;
 let inputStates = {};
 let walls = [] ;
 let cameraMap;
+let cursorPlayer;
 window.onload = startGame;
 
 function startGame() {
@@ -23,23 +24,33 @@ function startGame() {
     // out of the game window)
     modifySettings();
     let currentDate = Date.now();
-    let lastDate = Date.now();
+    let lastDateWall = Date.now();
+    let lastDateMove = Date.now();
+    let cameraset  = false ;
     engine.runRenderLoop(() => {
         currentDate = Date.now();
         let deltaTime = engine.getDeltaTime(); // remind you something ?
         let tron = scene.getMeshByName("tron");
         if(tron){
-            let followCamera = createFollowCamera(scene, tron);
-            
-            engine.registerView(document.getElementById("myCanvas"), followCamera);
-            engine.registerView(document.getElementById("camera"), cameraMap);
+            if(!cameraset){
+                let followCamera = createFollowCamera(scene, tron);
+                engine.registerView(document.getElementById("myCanvas"), followCamera);
+                engine.registerView(document.getElementById("camera"), cameraMap);
+                cameraset = true;
+            }
             //scene.activeCamera = followCamera;
-            tron.move();
-
-            if(currentDate-lastDate > 300){
+            if(true){
+                
+            
+                
+                tron.move();
+                moveCursor(tron);
+                lastDateMove=currentDate;
+            }
+            if(currentDate-lastDateWall > 300){
                 tron.score += 1 ;
                 tron.wall();
-                lastDate=currentDate;
+                lastDateWall=currentDate;
                 printFPS(deltaTime);
                 printScore(tron.score);
             }
@@ -132,14 +143,17 @@ function createWall(scene,from , to, nbWall, tron){
         angle = -angle;
     }
     
-    let wall = BABYLON.MeshBuilder.CreateBox(toString(nbWall), { width:longueur, height:5, size : 0.5}, scene);
+    let wall = BABYLON.MeshBuilder.CreateBox(toString(nbWall), { width:longueur, height:5, size : 2}, scene);
     wall.checkCollisions = true;
-    wall.position = new BABYLON.Vector3(from.x+(diffX / 2)  , 2, from.z +(diffZ / 2) ); 
+    wall.position = new BABYLON.Vector3(from.x+(diffX / 2)  , 2, from.z +(diffZ / 2)); 
     wall.rotation.y = angle;
     wall.visibility = 0.5;
+    let colors = createRainbowRGB(nbWall);
 
     let WallMaterial = new BABYLON.StandardMaterial("wallMaterial", scene);
-    WallMaterial.diffuseColor  = new BABYLON.Color3.Yellow;
+
+    WallMaterial.diffuseColor  = new BABYLON.Color3(colors[0],colors[1],colors[2]);
+    console.log(WallMaterial.diffuseColor)
 
     wall.material = WallMaterial
     //walls = BABYLON.Mesh.MergeMeshes([walls,wall]);
@@ -148,6 +162,38 @@ function createWall(scene,from , to, nbWall, tron){
 
 }
 
+function createRainbowRGB(x){
+    x = (x*50)%1530;
+    let rouge;
+    let vert;
+    let bleu;
+    if(x<255){
+        rouge = 1;
+        vert = x/255;
+        bleu = 0;
+    }else if(x<510){
+        rouge = (510-x) / 255;
+        vert = 1;
+        bleu = 0;
+    }else if(x<765){
+        rouge = 0;
+        vert = 1;
+        bleu = (x-510)/255;
+    }else if(x<1020){
+        rouge = 0;
+        vert = (1020-x) / 255;
+        bleu = 1;
+    }else if(x<1275){
+        rouge =  (x-1020) / 255;
+        vert = 0;
+        bleu = 1;
+    }else{
+        rouge = 1;
+        vert = 0;
+        bleu = (1530-x)/255;
+    }
+    return [rouge , vert , bleu];
+}
 
 function createLights(scene) {
     // i.e sun light with all light rays parallels, the vector is the direction.
@@ -156,6 +202,18 @@ function createLights(scene) {
     let light3 = new BABYLON.DirectionalLight("dir3", new BABYLON.Vector3(1, -1, -1), scene);
     let light4 = new BABYLON.DirectionalLight("dir4", new BABYLON.Vector3(-1, -1, 1), scene);
 
+}
+
+function moveCursor(tron){
+    cursorPlayer.position.x = tron.position.x;
+    cursorPlayer.position.z = tron.position.z;
+}
+
+function createCursor(tron){
+    cursorPlayer = BABYLON.MeshBuilder.CreateSphere("cursor", {diameter: 5, segments: 32} , scene);
+    cursorPlayer.position.x = tron.position.x;
+    cursorPlayer.position.y = 50;
+    cursorPlayer.position.z = tron.position.z;
 }
 
 function createFreeCamera(scene) {
@@ -185,10 +243,10 @@ function createCameraMap(scene) {
     let camera = new BABYLON.FreeCamera("cameraMap", new BABYLON.Vector3(-100, 100, -100), scene);
     camera.mode = BABYLON.Camera.ORTHOGRAPHIC_CAMERA;
     camera.setTarget(new BABYLON.Vector3(-100,2,-100));
-    camera.orthoTop = 300;
-    camera.orthoBottom = -300;
-    camera.orthoLeft = -300;
-    camera.orthoRight = 300;
+    camera.orthoTop = 200;
+    camera.orthoBottom = -200;
+    camera.orthoLeft = -200;
+    camera.orthoRight = 200;
     //camera.position = new BABYLON.Vector3(-100,50,-100);
     camera.fov = 1;
     //camera.attachControl(canvasMap);
@@ -246,6 +304,8 @@ function createTron(scene) {
 
             tron.lastPos = new BABYLON.Vector3(tron.x-3*tron.frontVector.x, tron.y, tron.z-3*tron.frontVector.z);
             tron.loose = false;
+            createCursor(tron);
+
             tron.wall = (scene) => {
                 if(!tron.jumping && !tron.loose){
                     
@@ -336,6 +396,7 @@ function resetTron(tron){
     walls = [];
     walls.push(createBaseWall());
     tron.loose = true ;
+    tron.nbWall=0;
     if(tron.highScore < tron.score){
         tron.highScore = tron.score;
     }

@@ -1,20 +1,31 @@
 html, body {
     padding:0px;
     margin:0px;
+    
 }
 
-#myCanvas {
-    
+#backgroundIMG{
+    position: fixed;
     width:100%;
     height:100%;
 }
 
-#camera {
-    left :50;
-    bottom: 100;
+
+#myCanvas {
     position: fixed;
-    background-color: black;
+    right:0;
+    height: 100%;
+    width: 50%;
+    background-color: transparent;
 }
+
+#camera {
+    position: fixed;
+    background-color: transparent;
+    height: 100%;
+    width: 50%;
+}
+
 
 #infoText {
     position: fixed;
