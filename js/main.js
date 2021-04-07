@@ -266,9 +266,9 @@ function createFollowCamera(scene, target) {
 	camera.heightOffset = 7; // how high above the object to place the camera
 	camera.rotationOffset = 180; // the viewing angle
 	camera.cameraAcceleration = 0.04; // how fast to move
-	camera.maxCameraSpeed = 5; // speed limit
+	camera.maxCameraSpeed = 20; // speed limit
     camera.fov = 1.5;
-    camera.viewport = new BABYLON.Viewport( 0,0,1,1); 
+    camera.viewport = new BABYLON.Viewport(0,0,1,1); 
     return camera;
 }
 
@@ -369,22 +369,22 @@ function createTron(scene) {
                     
                 //}
                 if(inputStates.left) {
-                    tron.rotation.y -= 0.02;
+                    tron.rotation.y -= 0.02*deltaTime/30;
                     if(tron.rotation.z < tron.baseRotationZ+0.8) tron.rotation.z += 0.02;
                     tron.frontVector = new BABYLON.Vector3(Math.sin(tron.rotation.y), 0, Math.cos(tron.rotation.y));
                 }
                 else if(inputStates.right) {
-                    tron.rotation.y += 0.02;
+                    tron.rotation.y += 0.02*deltaTime/30;
                     if(tron.rotation.z > tron.baseRotationZ-0.8) tron.rotation.z -=0.02;
                     tron.frontVector = new BABYLON.Vector3(Math.sin(tron.rotation.y), 0, Math.cos(tron.rotation.y));
                 }else{
                     let diffRotation = tron.rotation.z-tron.baseRotationZ;
-                    if(Math.pow(diffRotation,2)<=0.02){
-                        tron.rotation.z = tron.baseRotationZ ;
+                    if(Math.pow(diffRotation,2)<=0.02*deltaTime/30){
+                        tron.rotation.z = tron.baseRotationZ;
                     }else if(tron.rotation.z > tron.baseRotationZ){
-                        tron.rotation.z -= 0.02;
+                        tron.rotation.z -= 0.02*deltaTime/30;
                     }else if(tron.rotation.z < tron.baseRotationZ){
-                        tron.rotation.z += 0.02;
+                        tron.rotation.z += 0.02*deltaTime/30;
                     }
                 }
             }
