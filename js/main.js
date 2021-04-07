@@ -1,21 +1,18 @@
 
 let canvas;
-let canvasMap;
 let engine;
 let scene;
 // vars for handling inputs
 let inputStates = {};
 let walls = [] ;
-let cameraMap;
 let cursorPlayer;
 window.onload = startGame;
 
 function startGame() {
-    let canvasJeu = document.createElement("canvas");
+    let canvasJeu = document.getElementById("myCanvas");
     engine = new BABYLON.Engine(canvasJeu, true);
 
-    // Set the default canvas to use for events
-    engine.inputElement = document.getElementById("myCanvas");
+
 
     scene = createScene();
     
@@ -34,8 +31,13 @@ function startGame() {
         if(tron){
             if(!cameraset){
                 let followCamera = createFollowCamera(scene, tron);
-                engine.registerView(document.getElementById("myCanvas"), followCamera);
-                engine.registerView(document.getElementById("camera"), cameraMap);
+                let cameraMap = createCameraMap(scene);
+                scene.activeCamera = followCamera;
+	            scene.activeCameras.push(followCamera);
+	            //followCamera.attachControl(canvas,true);
+                scene.activeCameras.push(cameraMap);
+		        cameraMap.layerMask = 1;
+                followCamera.layerMask = 2;
                 cameraset = true;
             }
             //scene.activeCamera = followCamera;
@@ -67,13 +69,13 @@ function startGame() {
 
 function createScene() {
     canvas = document.querySelector("#myCanvas");
-    canvasMap = document.querySelector("#camera");
+    //canvasMap = document.querySelector("#camera");
 
     let scene = new BABYLON.Scene(engine);
 
 
     let camera = createFreeCamera(scene);
-    cameraMap = createCameraMap(scene);
+    
 
 
     createLights(scene);
@@ -100,7 +102,7 @@ function createGround(scene) {
     
 
     const ground = BABYLON.SceneLoader.ImportMesh("", "models/TheArena/", "theArenabis.babylon", scene,  (newMeshes, particleSystems, skeletons) => {
-        
+    //const ground = BABYLON.SceneLoader.ImportMesh(null, "models/", "SoccerArena.glb", scene,  (newMeshes, particleSystems, skeletons) => {
         let ground = newMeshes[0];
         ground.position = new BABYLON.Vector3(-200, 0, -200); 
         ground.scaling = new BABYLON.Vector3(1  ,1, 1);
@@ -241,6 +243,7 @@ function createFreeCamera(scene) {
 
 function createCameraMap(scene) {
     let camera = new BABYLON.FreeCamera("cameraMap", new BABYLON.Vector3(-100, 100, -100), scene);
+    camera.layerMask = 1;
     camera.mode = BABYLON.Camera.ORTHOGRAPHIC_CAMERA;
     camera.setTarget(new BABYLON.Vector3(-100,2,-100));
     camera.orthoTop = 200;
@@ -250,8 +253,8 @@ function createCameraMap(scene) {
     //camera.position = new BABYLON.Vector3(-100,50,-100);
     camera.fov = 1;
     //camera.attachControl(canvasMap);
-  
-
+    camera.viewport = new BABYLON.Viewport(0.015,0.025,0.15,0.25);
+    camera.renderingGroupId = 1;
     return camera;
 }
 
@@ -264,7 +267,7 @@ function createFollowCamera(scene, target) {
 	camera.cameraAcceleration = 0.04; // how fast to move
 	camera.maxCameraSpeed = 5; // speed limit
     camera.fov = 1.5;
-
+    camera.viewport = new BABYLON.Viewport( 0,0,1,1); 
     return camera;
 }
 
@@ -295,7 +298,7 @@ function createTron(scene) {
             tron.name = "tron";
             tron.nbWall= 0 ;
             tron.baseRotationZ = -1.5708
-            tron.speed = 0.25;
+            tron.speed = 0.5;
             tron.frontVector = new BABYLON.Vector3(0, 0, 1);
             tron.checkCollisions = true;
            
