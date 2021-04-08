@@ -5,7 +5,6 @@ Hey, I just created a game for my computer science master’s course.
 I just created a game for my computer science master’s course.
 
 Direct link to the game via HEROKU: https://tronfever.herokuapp.com/
-Direct link to the GitHub : GitHub - iBananos/DS4H_GAMES_3D
 
 Here you will find the development of my 3D game called TronFever inspired by the movie TRON, it is a SNAKE style game, for the moment only the single player mode is available.
 
