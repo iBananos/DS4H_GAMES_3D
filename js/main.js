@@ -276,18 +276,28 @@ function createTron(scene) {
             tronMaterial.glow.intensity = 3;
             tronMaterial.glow.addIncludedOnlyMesh(tron);
 
-
             tron.material = tronMaterial;
+
+
+            // JUMP SET UP
             tron.jumpAvailable = false;
             tron.jumping = false ; 
             tron.jumpTimer = Date.now(); 
-            tron.position = new BABYLON.Vector3(0, 3, 0); 
 
+
+            // BRAKE SET UP
+            tron.brakeAvailable = false;
+            tron.braking = false;
+            tron.brakeTimer = Date.now();
+
+
+            tron.position = new BABYLON.Vector3(0, 3, 0); 
             tron.scaling = new BABYLON.Vector3(1  ,1, 1);
             tron.name = "tron";
             tron.nbWall= 0 ;
             tron.baseRotationZ = -1.5708
             tron.speed = 0.05;
+            tron.basedSpeed = 0.05;
             tron.frontVector = new BABYLON.Vector3(0, 0, 1);
             tron.checkCollisions = true;
            
@@ -333,6 +343,27 @@ function createTron(scene) {
                         document.getElementById("JUMP").src = "images/JUMP_DISABLE.png";
                         tron.jumpTimer = currentDate;
                         jumpTron(tron);
+                    }
+                }
+
+                if(!tron.brakeAvailable){
+                    let timeElapsedBrake = currentDate - tron.brakeTimer ;
+                    if(tron.braking && ( timeElapsedBrake > 2000)){
+                        tron.speed = tron.basedSpeed;
+                        tron.braking = false ;
+                    }
+                    if( timeElapsedBrake > 7000){
+                        tron.brakeAvailable = true;
+                        document.getElementById("BRAKE").src = "images/BRAKE_ENABLE.png";
+                    }
+                }
+                else{
+                    if( inputStates.down){
+                        tron.speed = tron.basedSpeed/2;
+                        tron.braking = true; 
+                        tron.brakeAvailable = false;
+                        document.getElementById("BRAKE").src = "images/BRAKE_DISABLE.png";
+                        tron.brakeTimer = currentDate;
                     }
                 }
 
