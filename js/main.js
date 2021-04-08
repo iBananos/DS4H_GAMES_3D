@@ -84,6 +84,7 @@ function createScene() {
 
     stadium = createStadium(scene);
     ground = createGround(scene);
+    let title = createTitle(scene);
     let tron = createTron(scene);
     //scene.activeCamera = freeCamera;
     
@@ -93,6 +94,21 @@ function createScene() {
 
     //Tron(scene);
     return scene;
+}
+
+function createTitle(scene){
+    var title = BABYLON.MeshBuilder.CreateBox("title", { width:400, height:0.1, size: 400}, scene);
+    title.checkCollisions = false;
+    title.position = new BABYLON.Vector3(0, 300, 0); 
+    title.rotation.y = -Math.PI/2
+    let titleMaterial = new BABYLON.StandardMaterial("titleMaterial", scene);
+
+    titleMaterial.diffuseTexture  = new BABYLON.Texture("images/TRON FEVER.png");
+    
+
+    title.material = titleMaterial
+    
+    return title;
 }
 
 function createGround(scene) {
@@ -201,10 +217,15 @@ function createRainbowRGB(x){
 
 function createLights(scene) {
     // i.e sun light with all light rays parallels, the vector is the direction.
+    
     let light1 = new BABYLON.DirectionalLight("dir1", new BABYLON.Vector3(-1, -1, -1), scene);
+    light1.position = new BABYLON.Vector3(-200, 200, -200);
     let light2 = new BABYLON.DirectionalLight("dir2", new BABYLON.Vector3(1, -1, 1), scene);
+    light2.position = new BABYLON.Vector3(200, 200, 200);
     let light3 = new BABYLON.DirectionalLight("dir3", new BABYLON.Vector3(1, -1, -1), scene);
+    light3.position = new BABYLON.Vector3(200, 200, -200);
     let light4 = new BABYLON.DirectionalLight("dir4", new BABYLON.Vector3(-1, -1, 1), scene);
+    light4.position = new BABYLON.Vector3(-200, 200, 200);
 
 }
 
@@ -221,8 +242,13 @@ function createCursor(tron){
 }
 
 function createFreeCamera(scene) {
-    let camera = new BABYLON.FreeCamera("freeCamera", new BABYLON.Vector3(0, 100, 0), scene);
+    let camera = new BABYLON.FreeCamera("freeCamera", new BABYLON.Vector3(0, 320, 0), scene);
+    camera.mode = BABYLON.Camera.ORTHOGRAPHIC_CAMERA;
     camera.setTarget(new BABYLON.Vector3(0,2,0));
+    camera.orthoTop = 300;
+    camera.orthoBottom = -300;
+    camera.orthoLeft = -500;
+    camera.orthoRight = 500;
     camera.checkCollisions = false; 
     // avoid flying with the camera
     camera.applyGravity = false;
