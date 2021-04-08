@@ -1,23 +1,31 @@
-# DS4H_GAMES 3D - Ralph EL CHALFOUN
+# DS4H_GAMES 3D - TRON FEVER - Ralph EL CHALFOUN
 
-Projet de JavaScript jeu vidéo MultiJoueur en ligne.
+Hey, I just created a game for my computer science master’s course.
 
-Lien direct vers le jeu via HEROKU : https://tronfever.herokuapp.com/ 
+I just created a game for my computer science master’s course.
 
-Ici vous trouverez le développement de mon jeu 3D appelé TronFever inspiré du film TRON, c'est un  jeu du style SNAKE, pour l'instant seulement le mode Solo est disponible. 
+Direct link to the game via HEROKU: https://tronfever.herokuapp.com/
+Direct link to the GitHub : GitHub - iBananos/DS4H_GAMES_3D
 
-Règle du jeu : 
+Here you will find the development of my 3D game called TronFever inspired by the movie TRON, it is a SNAKE style game, for the moment only the single player mode is available.
 
- - Votre Tron (moto) avance toute seule
- - Lorsqu'elle avance elle crée des murs derrière elle 
- - Grâce à 'Q' & 'D' ( ou les flèches directionelles 'GAUCHE' & 'DROITE') vous pourrez tourner à gauche et droite
- - La touche 'SPACE' permet de JUMP ( cooldown de 5 secondes, durée 1 secondes)
- - La touche 'S' permet de BRAKE ( cooldown de 7 secondes, durée 3 secondes)
- - BUT : Tenir le plus longtemps en jeu sans se prendre un mur ou toucher les bords de la MAP.
- 
- DISCLAIMER :   
- 
- Actuellement le jeu est en développement, le calcul des déplacements se font en fonction du temps, le jeu n'est pas optimisé :
-  - ni pour les pc à faible configuration, 
-  - ni pour une durée trop longue 
-  - (veuillez rafraichir la page en cas de 'LAG') 
+Rule of the game :
+
+Your Tron (motorbike) is moving on its own
+When it walks it creates walls behind it
+Using ‘Q’ & ‘D’ (or the directional arrows ‘LEFT’ & ‘RIGHT’) you can turn left and right
+The ‘SPACE’ key allows JUMP (5 seconds cooldown, 1 second duration)
+The ‘S’ key allows BRAKE (7 seconds cooldown, 3 seconds duration)
+PURPOSE: To last the longest in game without hitting a wall or touching the edges of the MAP.
+
+DISCLAIMER:
+Currently the game is in development, the displacement calculation is done according to time, the game is not optimized:
+
+nor for low configuration PCs,
+nor for too long a period
+
+(please refresh the page in case of ‘LAG’)
+
+Do not hesitate to give your opinion or / and advice I’m starting on babylon it’s my first try :slight_smile:
+
+Have fun
