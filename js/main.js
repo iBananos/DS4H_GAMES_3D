@@ -251,12 +251,12 @@ function createCameraMap(scene) {
 function createFollowCamera(scene, target) {
     let camera = new BABYLON.FollowCamera("tronFollowCamera", target.position, scene, target);
 
-    camera.radius = 5; // how far from the object to follow
-	camera.heightOffset = 7; // how high above the object to place the camera
+    camera.radius = 10; // how far from the object to follow
+	camera.heightOffset = 10; // how high above the object to place the camera
 	camera.rotationOffset = 180; // the viewing angle
-	camera.cameraAcceleration = 0.04; // how fast to move
-	camera.maxCameraSpeed = 20; // speed limit
-    camera.fov = 1.5;
+	camera.cameraAcceleration = 0.5; // how fast to move
+	camera.maxCameraSpeed = 100; // speed limit 
+    camera.fov = 2;
     camera.viewport = new BABYLON.Viewport(0,0,1,1); 
     return camera;
 }
@@ -368,7 +368,7 @@ function createTron(scene) {
                 }
                 else if(inputStates.right) { 
                     tron.rotation.y += 0.02*deltaTime/10;
-                    if(tron.rotation.z - 0.02*deltaTime/10 > tron.baseRotationZ+0.8){
+                    if(tron.rotation.z - 0.02*deltaTime/10 > tron.baseRotationZ-0.8){
                         tron.rotation.z -= 0.02*deltaTime/10;
                    }else{
                        tron.rotation.z =tron.baseRotationZ-0.8;
