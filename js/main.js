@@ -2,6 +2,7 @@
 let canvas;
 let engine;
 let scene;
+let timeStart;
 // vars for handling inputs
 let inputStates = {};
 let walls = [] ;
@@ -41,6 +42,7 @@ function startGame() {
 		        cameraMap.layerMask = 1;
                 followCamera.layerMask = 2;
                 cameraset = true;
+                timeStart = Date.now();
             }
             //scene.activeCamera = followCamera;
             tron.move(deltaTime);
@@ -48,11 +50,10 @@ function startGame() {
             lastDateMove=currentDate;
 
             if(currentDate-lastDateWall > 300){
-                tron.score += 1 ;
                 tron.wall();
                 lastDateWall=currentDate;
                 printFPS(deltaTime);
-                printScore(tron.score);
+                printScore(tron, currentDate);
             }
             //tron.wall(scene);
         }
@@ -433,6 +434,7 @@ function resetTron(tron){
         tron.highScore = tron.score;
     }
     tron.score = 0
+    timeStart = Date.now();
     printHScore(tron.highScore);
 }
 
@@ -519,9 +521,10 @@ function printFPS(deltaTime){
     FPS.innerHTML = Math.floor(1000/deltaTime);
 }
 
-function printScore(score){
+function printScore(tron, date){
     let scorehtml = document.querySelector("#score");
-    scorehtml.innerHTML = score;
+    tron.score = (date - timeStart) /1000;
+    scorehtml.innerHTML = tron.score;
 }
 function printHScore(highScore){
     let highScorehtml = document.querySelector("#HS");

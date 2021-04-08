@@ -38,3 +38,15 @@ html, body {
 
 }
 
+#JUMP{
+    position: fixed;
+    top : 150px;
+    left:10;
+}
+
+#BRAKE{
+    position: fixed;
+    top : 250px;
+    left:10;
+}
+
