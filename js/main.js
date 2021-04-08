@@ -220,24 +220,13 @@ function createCursor(tron){
 }
 
 function createFreeCamera(scene) {
-    let camera = new BABYLON.FreeCamera("freeCamera", new BABYLON.Vector3(-100, -100, -100), scene);
-
-    camera.attachControl(canvas);
-    // prevent camera to cross ground
-    camera.checkCollisions = true; 
+    let camera = new BABYLON.FreeCamera("freeCamera", new BABYLON.Vector3(0, 100, 0), scene);
+    camera.setTarget(new BABYLON.Vector3(0,2,0));
+    camera.checkCollisions = false; 
     // avoid flying with the camera
-    camera.applyGravity = true;
+    camera.applyGravity = false;
 
-    // Add extra keys for camera movements
-    // Need the ascii code of the extra key(s). We use a string method here to get the ascii code
-    camera.keysUp.push('z'.charCodeAt(0));
-    camera.keysDown.push('s'.charCodeAt(0));
-    camera.keysLeft.push('q'.charCodeAt(0));
-    camera.keysRight.push('d'.charCodeAt(0));
-    camera.keysUp.push('Z'.charCodeAt(0));
-    camera.keysDown.push('S'.charCodeAt(0));
-    camera.keysLeft.push('Q'.charCodeAt(0));
-    camera.keysRight.push('D'.charCodeAt(0));
+    
 
     return camera;
 }
@@ -369,22 +358,30 @@ function createTron(scene) {
                     
                 //}
                 if(inputStates.left) {
-                    tron.rotation.y -= 0.02*deltaTime/30;
-                    if(tron.rotation.z < tron.baseRotationZ+0.8) tron.rotation.z += 0.02;
+                    tron.rotation.y -= 0.02*deltaTime/10;
+                    if(tron.rotation.z + 0.02*deltaTime/10 < tron.baseRotationZ+0.8){
+                         tron.rotation.z += 0.02*deltaTime/10;
+                    }else{
+                        tron.rotation.z =tron.baseRotationZ+0.8
+                    }
                     tron.frontVector = new BABYLON.Vector3(Math.sin(tron.rotation.y), 0, Math.cos(tron.rotation.y));
                 }
-                else if(inputStates.right) {
-                    tron.rotation.y += 0.02*deltaTime/30;
-                    if(tron.rotation.z > tron.baseRotationZ-0.8) tron.rotation.z -=0.02;
+                else if(inputStates.right) { 
+                    tron.rotation.y += 0.02*deltaTime/10;
+                    if(tron.rotation.z - 0.02*deltaTime/10 > tron.baseRotationZ+0.8){
+                        tron.rotation.z -= 0.02*deltaTime/10;
+                   }else{
+                       tron.rotation.z =tron.baseRotationZ-0.8;
+                   }
                     tron.frontVector = new BABYLON.Vector3(Math.sin(tron.rotation.y), 0, Math.cos(tron.rotation.y));
                 }else{
                     let diffRotation = tron.rotation.z-tron.baseRotationZ;
-                    if(Math.pow(diffRotation,2)<=0.02*deltaTime/30){
+                    if(Math.pow(diffRotation,2)<=0.02*deltaTime/10){
                         tron.rotation.z = tron.baseRotationZ;
                     }else if(tron.rotation.z > tron.baseRotationZ){
-                        tron.rotation.z -= 0.02*deltaTime/30;
+                        tron.rotation.z -= 0.02*deltaTime/10;
                     }else if(tron.rotation.z < tron.baseRotationZ){
-                        tron.rotation.z += 0.02*deltaTime/30;
+                        tron.rotation.z += 0.02*deltaTime/10;
                     }
                 }
             }
