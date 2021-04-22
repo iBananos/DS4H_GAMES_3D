@@ -1,169 +1,253 @@
-
 let canvas;
 let engine;
 let scene;
-let timeStart;
-// vars for handling inputs
+let timeStart ;
 let inputStates = {};
-let walls = [] ;
-let stadium;
-let ground;
+let walls = [];
+let pause = false;
+let pausefired = false;
+let nbWall = 0;
 let cursorPlayer;
-window.onload = startGame;
+let music;
+let bonus = [];
+let gameWantReady = true ;
+let bonusPos = [];
+let missileCast = false ;
+let missiles;
+let escapeReleased = true;
+let tron;
+let listEnemis = [];
+let listUsernameEnemis = [];
+let currentDate;
+let nbEnnemis = 0;
+let answeredReady = false;
+let timeToStart =Date.now()+20000;
+let colorList = [
+    {'r':255,'g':0,'b':0},
+    {'r':0,'g':255,'b':0},
+    {'r':0,'g':0,'b':255},
+    {'r':255,'g':255,'b':0}
+]
+
 
 function startGame() {
     let canvasJeu = document.getElementById("myCanvas");
     engine = new BABYLON.Engine(canvasJeu, true);
-
-
-
     scene = createScene();
-    
-    walls.push(createBaseWall());
-    // modify some default settings (i.e pointer events to prevent cursor to go 
-    // out of the game window)
     modifySettings();
-    let currentDate = Date.now();
     let lastDateWall = Date.now();
     let lastDateMove = Date.now();
     let cameraset  = false ;
+    let alpha = 0;
     engine.runRenderLoop(() => {
         currentDate = Date.now();
-        let deltaTime = engine.getDeltaTime(); // remind you something ?
-        let tron = scene.getMeshByName("tron");
-        if(tron){
-            if(!cameraset){
-                let followCamera = createFollowCamera(scene, tron);
-                let cameraMap = createCameraMap(scene);
-                scene.activeCamera = followCamera;
-	            scene.activeCameras.push(followCamera);
-	            //followCamera.attachControl(canvas,true);
-                scene.activeCameras.push(cameraMap);
-		        cameraMap.layerMask = 1;
-                followCamera.layerMask = 2;
-                cameraset = true;
-                timeStart = Date.now();
-            }
-            //scene.activeCamera = followCamera;
-            tron.move(deltaTime);
-            moveCursor(tron);
-            lastDateMove=currentDate;
+        // SI LE JEU DEMANDE D'ÊTRE PRET
+        if(gameWantReady){
+            let deltaTime = engine.getDeltaTime(); 
+            let tron = scene.getMeshByName("tron");
 
-            if(currentDate-lastDateWall > 300){
-                tron.wall();
-                lastDateWall=currentDate;
-                printFPS(deltaTime);
+            // SI LE TRON EST PRET
+            if(tron){
+
+                // SI LA CAMERA N'EST PAS SET
+                if(!cameraset){
+                    let followCamera = createFollowCamera(scene, tron);
+                    let cameraMap = createCameraMap(scene);
+                    scene.activeCamera = followCamera;
+                    scene.activeCameras.push(followCamera);
+                    scene.activeCameras.push(cameraMap);
+                    cameraMap.layerMask = 1;
+                    followCamera.layerMask = 2;
+                    cameraset = true;
+                    timeStart = Date.now();
+                }
+                // SI TOUT EST PRET DEMANDER AU JOUEUR DE SIGNALER QU'IL EST PRET
+                else{
+                    if(!answeredReady){ 
+                        askReady();
+                    }
+                }
+            }
+        // SI LA PARTIE EST EN COURS
+        }else{
+            let tempsRestant = timeToStart-Date.now();
+            if(tempsRestant>0){
+                printTIMEOUT(tempsRestant);
+                document.getElementById("TIMEOUT").style.display = "block";
+            }else{
+                document.getElementById("TIMEOUT").style.display = "none";
+                let deltaTime = engine.getDeltaTime(); 
+                let tron = scene.getMeshByName("tron");
+                if(missileCast){
+                    missiles.move(deltaTime);
+                }
+                tron.move(deltaTime,inputStates,walls,bonus);       
+                moveCursor(tron);
+                lastDateMove=currentDate;
+                if(displayPlanets){moveAllPlanet(alpha);}
+                    alpha += 0.001;
+                if(currentDate-lastDateWall > 300){
+                    tron.wall(scene,inputStates);
+                    lastDateWall=currentDate;
+                    printFPS(deltaTime);            
+                }
+                checkBonus(scene);
+                moveAllBonus();
                 printScore(tron, currentDate);
-            }
-            //tron.wall(scene);
+            }       
         }
-       
-        
-        
         scene.render()
-
-        
     });
+}
+
+function restartGame(){
+    resetTron(this.tron,true);
+
+}
+
+function askReady(){
+    document.getElementById("HOME").style.display = "none";
+    document.getElementById("LOADING").style.display = "none";
+    document.getElementById("READY").style.display = "block";
+    document.getElementById("WAITING").style.display = "none";
+    document.getElementById("GAME").style.display = "none";
+}
+
+function ready(){
+    send("ready",{'username' : username});
+    answeredReady= true;
+    document.getElementById("HOME").style.display = "none";
+    document.getElementById("LOADING").style.display = "none";
+    document.getElementById("READY").style.display = "none";
+    document.getElementById("WAITING").style.display = "block";
+    document.getElementById("GAME").style.display = "none";
+}
+
+/*
+function doPause(){
+    if(escapeReleased){
+        if(inputStates.escape){
+            escapeReleased = false ;
+            pause = true ;
+            pauseScreen(pause);
+        }
+    }
+}
+function unPause(){ 
+    if(escapeReleased){
+        if (inputStates.escape){
+            pause = false;
+            escapeReleased = false;
+            pauseScreen(pause);
+        }
+    }
+}
+
+*/
+
+function checkBonus(scene){
+    for(let i = 0 ; i < 5 ; i++){
+        if(bonus[i] == undefined){
+            if(bonusPos[i]!= undefined){
+                bonus[i] = createBonus(scene,bonusPos[i]);
+            }
+        }
+    }
 }
 
 function createScene() {
     canvas = document.querySelector("#myCanvas");
-    //canvasMap = document.querySelector("#camera");
-
     let scene = new BABYLON.Scene(engine);
-
-
+    scene.clearColor = new BABYLON.Color3(0, 0, 0);
+    music = new BABYLON.Sound("Music", "musique/Background.wav", scene, null, {
+        loop: true,
+        autoplay: true,
+        volume : 0.1
+    });
     let camera = createFreeCamera(scene);
-    
-
-
-    createLights(scene);
-    //engine.registerView(document.getElementById("myCanvas"), camera);
-    
-
-
-    stadium = createStadium(scene);
-    ground = createGround(scene);
-    let tron = createTron(scene);
-    //scene.activeCamera = freeCamera;
-    
-    
-    
-    
-
-    //Tron(scene);
+    for(let i = 0 ; i < 5 ; i++){
+        if(bonusPos[i]!=undefined){
+            bonus[i] = createBonus(scene,bonusPos[i]);
+        }
+        
+    }
+    createMAP(scene);
     return scene;
-}
-
-function createGround(scene) {
-    //const ground = BABYLON.SceneLoader.ImportMesh("", "models/TheArena/", "theArenabis.babylon", scene,  (newMeshes, particleSystems, skeletons) => {
-    //const ground = BABYLON.SceneLoader.ImportMesh("Plane.006", "models/TronFloor/", "Ground.babylon", scene,  (newMeshes, particleSystems, skeletons) => {
-    const ground = BABYLON.SceneLoader.ImportMesh("Plane", "models/TronFloor/", "GroundSansObstacle.babylon", scene,  (newMeshes, particleSystems, skeletons) => {
-        let ground = newMeshes[0];
-        ground.checkCollisions = true;
-        ground.position = new BABYLON.Vector3(0, 0, 0); 
-        ground.scaling = new BABYLON.Vector3(9  ,9, 9);
-        ground.name = "ground";
-        // to be taken into account by collision detection
-        ground.checkCollisions = false;
-        //groundMaterial.wireframe=true;
-    return ground;
-    });
-}
-
-function createStadium(scene) {
-    //const ground = BABYLON.SceneLoader.ImportMesh("", "models/TheArena/", "theArenabis.babylon", scene,  (newMeshes, particleSystems, skeletons) => {
-    const stadium = BABYLON.SceneLoader.ImportMesh("Roof Shade", "models/TronStadium/", "TronArena.babylon", scene,  (newMeshes, particleSystems, skeletons) => {
-        let stadium = newMeshes[0];
-        stadium.checkCollisions = true;
-        stadium.position = new BABYLON.Vector3(0, 0, 0); 
-        stadium.scaling = new BABYLON.Vector3(4  ,2, 3);
-        stadium.name = "stadium";
-
-        // to be taken into account by collision detection
-        stadium.checkCollisions = true;
-        //groundMaterial.wireframe=true;
-    return stadium;
-    });
-}
-
-function createBaseWall(scene){
-    var modelBox = BABYLON.MeshBuilder.CreateBox("mb", { width:0.1, height:2}, scene);
-    modelBox.checkCollisions = true;
-    modelBox.position = new BABYLON.Vector3(0, -10, 0); 
-    modelBox.rotation.y = Math.PI/2;
-    
-    return modelBox;
 
 }
 
-function createWall(scene,from , to, nbWall, tron){
-    let diffX = to.x-from.x;
-    let diffZ = to.z-from.z;
-    
+function reset(){
+    for(let i = 0 ; i < walls.length ; i++){
+        if(walls[i]!=undefined){
+           walls[i].dispose();
+        }
+    }
+    walls = [];
+    timeStart = Date.now();
+}
+
+function createWall(scene,fromX,fromZ , toX,toZ,mine,color){
+    let diffX = toX-fromX;
+    let diffZ = toZ-fromZ;
+    nbWall ++;
     let longueur = Math.pow((Math.pow(diffX,2) + Math.pow(diffZ,2)),0.5);
     let angle = Math.acos(diffX/longueur);
     if(diffZ > 0 ){
         angle = -angle;
     }
-    
     let wall = BABYLON.MeshBuilder.CreateBox(toString(nbWall), { width:longueur, height:5, size : 2}, scene);
-    wall.checkCollisions = true;
-    wall.position = new BABYLON.Vector3(from.x+(diffX / 2)  , 2, from.z +(diffZ / 2)); 
+    wall.position = new BABYLON.Vector3(fromX+(diffX / 2)  , 2, fromZ +(diffZ / 2)); 
     wall.rotation.y = angle;
-    wall.visibility = 0.5;
-    let colors = createRainbowRGB(nbWall);
-
+    if(displayTransparency){ wall.visibility = 0.5;}
+    //let colors = createRainbowRGB(nbWall);
     let WallMaterial = new BABYLON.StandardMaterial("wallMaterial", scene);
-
-    WallMaterial.diffuseColor  = new BABYLON.Color3(colors[0],colors[1],colors[2]);
-    
-
+    WallMaterial.diffuseColor  = new BABYLON.Color3(colorList[color].r,colorList[color].g,colorList[color].b);
     wall.material = WallMaterial
     //walls = BABYLON.Mesh.MergeMeshes([walls,wall]);
-    walls.push(wall);
-    //console.log(wall.position);
+    walls[nbWall] = wall;
+    if(mine) {send("wall",{'username':username,'fromX' : fromX,'fromZ':fromZ, 'toX' : toX,'toZ' : toZ , 'color' : color});}
+}
 
+
+function createMissile(scene,from,tron){
+    let missile = BABYLON.MeshBuilder.CreateBox("missile", { width:0.5, height:1, size : 5 }, scene);
+    missile.frontVector = tron.frontVector;
+    missile.position = new BABYLON.Vector3(from.x, 4, from.z); 
+
+    missile.rotation.y = tron.rotation.y;
+    let missileMaterial = new BABYLON.StandardMaterial("missileMaterial", scene);
+    missileMaterial.diffuseColor  = new BABYLON.Color3.Yellow;
+    missileMaterial.emissiveColor = new BABYLON.Color3.Yellow;
+    missileMaterial.intensity = 5;
+    missile.material = missileMaterial
+    missile.speed = 0.3 ;
+    
+
+    missile.move = (deltaTime) => {
+        missile.moveWithCollisions(missile.frontVector.multiplyByFloats(missile.speed*deltaTime, missile.speed*deltaTime, missile.speed*deltaTime));
+        destructWall(missile);
+    }
+    missileCast = true ;
+    missiles = missile;
+}
+
+function destructWall(missile){
+    if((missiles.position.x > 197) || (missiles.position.z > 207) || (missiles.position.x < -197) || (missiles.position.z < -207)){
+        missiles.dispose();
+        missileCast = false ;
+        return;
+    }
+    for(let i = 0 ; i < walls.length ; i++){
+        if(walls[i]!=undefined){
+            if(missiles.intersectsMesh(walls[i],true)){
+                walls[i].dispose();
+                missiles.dispose();
+                missileCast = false ;
+                walls[i] = undefined ;
+                return;
+            }
+        }
+    }
 }
 
 function createRainbowRGB(x){
@@ -199,14 +283,34 @@ function createRainbowRGB(x){
     return [rouge , vert , bleu];
 }
 
-function createLights(scene) {
-    // i.e sun light with all light rays parallels, the vector is the direction.
-    let light1 = new BABYLON.DirectionalLight("dir1", new BABYLON.Vector3(-1, -1, -1), scene);
-    let light2 = new BABYLON.DirectionalLight("dir2", new BABYLON.Vector3(1, -1, 1), scene);
-    let light3 = new BABYLON.DirectionalLight("dir3", new BABYLON.Vector3(1, -1, -1), scene);
-    let light4 = new BABYLON.DirectionalLight("dir4", new BABYLON.Vector3(-1, -1, 1), scene);
-
+function createBonus(scene,position){
+    let height = 1;
+    let diameter = 10 ;
+    let tessellation = 32 ;
+    let subdivisions = 1 ;
+    let updatable = true ;
+    const bonus = BABYLON.Mesh.CreateCylinder("cylinder", height, diameter, diameter, tessellation, subdivisions, scene, updatable); 
+    bonus.position = new BABYLON.Vector3(position.x,position.y,position.z);
+    bonus.rotation.x = -Math.PI/2;
+    bonus.move = (position) => {
+        bonus.rotation.y += 0.05 ;
+        bonus.position = new BABYLON.Vector3(position.x,position.y,position.z);
+    }
+    let bonusMaterial = new BABYLON.StandardMaterial("BonusMaterial", scene);
+    bonusMaterial.diffuseTexture  = new BABYLON.Texture("images/STAR.png");
+    bonus.material = bonusMaterial
+    return bonus;
 }
+
+function moveAllBonus(){
+    for(let i = 0 ; i < bonus.length ; i++){
+        if(bonus[i]!=undefined){
+        bonus[i].move(bonusPos[i]);
+        }
+    }
+}
+
+
 
 function moveCursor(tron){
     cursorPlayer.position.x = tron.position.x;
@@ -221,10 +325,14 @@ function createCursor(tron){
 }
 
 function createFreeCamera(scene) {
-    let camera = new BABYLON.FreeCamera("freeCamera", new BABYLON.Vector3(0, 100, 0), scene);
+    let camera = new BABYLON.FreeCamera("freeCamera", new BABYLON.Vector3(0, 320, 0), scene);
+    camera.mode = BABYLON.Camera.ORTHOGRAPHIC_CAMERA;
     camera.setTarget(new BABYLON.Vector3(0,2,0));
+    camera.orthoTop = 1500;
+    camera.orthoBottom = -1500;
+    camera.orthoLeft = -2000;
+    camera.orthoRight = 2000;
     camera.checkCollisions = false; 
-    // avoid flying with the camera
     camera.applyGravity = false;
 
     
@@ -241,216 +349,25 @@ function createCameraMap(scene) {
     camera.orthoBottom = -200;
     camera.orthoLeft = -200;
     camera.orthoRight = 200;
-    //camera.position = new BABYLON.Vector3(-100,50,-100);
     camera.fov = 1;
-    //camera.attachControl(canvasMap);
     camera.viewport = new BABYLON.Viewport(0.015,0.025,0.20,0.35);
     camera.renderingGroupId = 1;
     return camera;
 }
 
 function createFollowCamera(scene, target) {
+    let position = new BABYLON.Vector3
     let camera = new BABYLON.FollowCamera("tronFollowCamera", target.position, scene, target);
 
-    camera.radius = 10; // how far from the object to follow
+    camera.radius = 30; // how far from the object to follow
 	camera.heightOffset = 10; // how high above the object to place the camera
 	camera.rotationOffset = 180; // the viewing angle
 	camera.cameraAcceleration = 0.5; // how fast to move
 	camera.maxCameraSpeed = 100; // speed limit 
-    camera.fov = 2;
-    camera.viewport = new BABYLON.Viewport(0,0,1,1); 
+    camera.fov = 1;
+    //camera.viewport = new BABYLON.Viewport(0,0,1,1); 
     return camera;
 }
-
-let zMovement = 5;
-
-
-
-function createTron(scene) {
-    BABYLON.SceneLoader.ImportMesh("", "models/Tron/", "Tron_Motorcycle.babylon", scene,  (newMeshes, particleSystems, skeletons) => {
-            let tron = newMeshes[0];
-            let tronMaterial = new BABYLON.StandardMaterial("tronMaterial", scene);
-            tronMaterial.diffuseTexture = new BABYLON.Texture("models/Tron/Sphere_003_baked_EMIT.jpg");
-            tronMaterial.emissiveTexture = new BABYLON.Texture("models/Tron/Sphere_003_baked_EMIT.jpg");
-            tronMaterial.emissiveColor = new BABYLON.Color3.Yellow;
-            tronMaterial.glow = new BABYLON.GlowLayer("glow", scene, {blurKernelSize : 150});
-            tronMaterial.glow.intensity = 3;
-            tronMaterial.glow.addIncludedOnlyMesh(tron);
-
-            tron.material = tronMaterial;
-
-
-            // JUMP SET UP
-            tron.jumpAvailable = false;
-            tron.jumping = false ; 
-            tron.jumpTimer = Date.now(); 
-
-
-            // BRAKE SET UP
-            tron.brakeAvailable = false;
-            tron.braking = false;
-            tron.brakeTimer = Date.now();
-
-
-            tron.position = new BABYLON.Vector3(0, 3, 0); 
-            tron.scaling = new BABYLON.Vector3(1  ,1, 1);
-            tron.name = "tron";
-            tron.nbWall= 0 ;
-            tron.baseRotationZ = -1.5708
-            tron.speed = 0.05;
-            tron.basedSpeed = 0.05;
-            tron.frontVector = new BABYLON.Vector3(0, 0, 1);
-            tron.checkCollisions = true;
-           
-            tron.score = 0 ;
-            tron.highScore = 0;
-
-            tron.lastPos = new BABYLON.Vector3(tron.x-3*tron.frontVector.x, tron.y, tron.z-3*tron.frontVector.z);
-            tron.loose = false;
-            createCursor(tron);
-
-            tron.wall = (scene) => {
-                if(!tron.jumping && !tron.loose){
-                    
-                    let newPos = new BABYLON.Vector3(tron.position.x-4*tron.frontVector.x, tron.position.y, tron.position.z-4*tron.frontVector.z);
-                    tron.nbWall +=1 ;
-                    createWall(scene, tron.lastPos , newPos, tron.nbWall, tron);
-                    tron.lastPos = newPos;
-                }
-                else{
-                    
-                    tron.loose = false;
-                    tron.lastPos = new BABYLON.Vector3(tron.position.x, tron.position.y, tron.position.z);
-                }
-            }
-
-            tron.move = (deltaTime) => {
-                let currentDate = Date.now();
-                if(!tron.jumpAvailable ){
-                    let timeElapsedDuringJump = currentDate - tron.jumpTimer ;
-                    if(tron.jumping && ( timeElapsedDuringJump < 1000)){
-                        fallTron(tron, timeElapsedDuringJump);
-                    }else{
-                        tron.jumping = false;
-                        tron.position.y = 2
-                    }
-                    if( timeElapsedDuringJump > 5000){
-                        tron.jumpAvailable = true;
-                        document.getElementById("JUMP").src = "images/JUMP_ENABLE.png";
-                    }
-                }else{
-                    if(inputStates.space){
-                        tron.jumpAvailable = false;
-                        document.getElementById("JUMP").src = "images/JUMP_DISABLE.png";
-                        tron.jumpTimer = currentDate;
-                        jumpTron(tron);
-                    }
-                }
-
-                if(!tron.brakeAvailable){
-                    let timeElapsedBrake = currentDate - tron.brakeTimer ;
-                    if(tron.braking && ( timeElapsedBrake > 2000)){
-                        tron.speed = tron.basedSpeed;
-                        tron.braking = false ;
-                    }
-                    if( timeElapsedBrake > 7000){
-                        tron.brakeAvailable = true;
-                        document.getElementById("BRAKE").src = "images/BRAKE_ENABLE.png";
-                    }
-                }
-                else{
-                    if( inputStates.down){
-                        tron.speed = tron.basedSpeed/2;
-                        tron.braking = true; 
-                        tron.brakeAvailable = false;
-                        document.getElementById("BRAKE").src = "images/BRAKE_DISABLE.png";
-                        tron.brakeTimer = currentDate;
-                    }
-                }
-
-                let yMovement = 0;
-            
-                if (tron.position.y > 2) {
-                    zMovement = 0;
-                    yMovement = -2;
-                } 
-                //if(inputStates.up){
-                    if((tron.position.x + tron.frontVector.x*2 +tron.speed > 197) || (tron.position.z + tron.frontVector.z*2 + tron.speed > 207) || (tron.position.x + tron.frontVector.x*2+ tron.speed < -197) || (tron.position.z + tron.frontVector.z*2+ tron.speed < -207)){
-                        resetTron(tron);
-                        
-                    }
-                    for(let i = 0 ; i < walls.length ; i++){
-                        if(tron.intersectsMesh(walls[i],true)){
-                            console.log("COLLAPSE" , i);
-                            resetTron(tron);
-                            break;
-                        }
-                    }
-                    tron.moveWithCollisions(tron.frontVector.multiplyByFloats(tron.speed*deltaTime, tron.speed*deltaTime, tron.speed*deltaTime));
-                    
-                //}
-                if(inputStates.left) {
-                    tron.rotation.y -= 0.02*deltaTime/10;
-                    if(tron.rotation.z + 0.02*deltaTime/10 < tron.baseRotationZ+0.8){
-                         tron.rotation.z += 0.02*deltaTime/10;
-                    }else{
-                        tron.rotation.z =tron.baseRotationZ+0.8
-                    }
-                    tron.frontVector = new BABYLON.Vector3(Math.sin(tron.rotation.y), 0, Math.cos(tron.rotation.y));
-                }
-                else if(inputStates.right) { 
-                    tron.rotation.y += 0.02*deltaTime/10;
-                    if(tron.rotation.z - 0.02*deltaTime/10 > tron.baseRotationZ-0.8){
-                        tron.rotation.z -= 0.02*deltaTime/10;
-                   }else{
-                       tron.rotation.z =tron.baseRotationZ-0.8;
-                   }
-                    tron.frontVector = new BABYLON.Vector3(Math.sin(tron.rotation.y), 0, Math.cos(tron.rotation.y));
-                }else{
-                    let diffRotation = tron.rotation.z-tron.baseRotationZ;
-                    if(Math.pow(diffRotation,2)<=0.02*deltaTime/10){
-                        tron.rotation.z = tron.baseRotationZ;
-                    }else if(tron.rotation.z > tron.baseRotationZ){
-                        tron.rotation.z -= 0.02*deltaTime/10;
-                    }else if(tron.rotation.z < tron.baseRotationZ){
-                        tron.rotation.z += 0.02*deltaTime/10;
-                    }
-                }
-            }
-            return tron;
-        });
-}
-
-function resetTron(tron){
-    tron.position.x = 0 ;
-    tron.position.z = 0;
-    tron.position.y = 2;
-    walls.forEach( element => element.dispose());
-    walls = [];
-    walls.push(createBaseWall());
-    tron.loose = true ;
-    tron.nbWall=0;
-    if(tron.highScore < tron.score){
-        tron.highScore = tron.score;
-    }
-    tron.score = 0
-    timeStart = Date.now();
-    printHScore(tron.highScore);
-}
-
-function jumpTron(tron){
-    tron.jumping = true ;
-}
-
-function fallTron(tron, time){
-    if(time<250 || time >750){
-        tron.rotation.x -=0.008;
-    }else{
-        tron.rotation.x +=0.008;
-    }
-    tron.position.y = (-1/50000*Math.pow(time,2)+1/50*time +2);
-}
-
 
 window.addEventListener("resize", () => {
     engine.resize()
@@ -484,6 +401,7 @@ function modifySettings() {
     inputStates.up = false;
     inputStates.down = false;
     inputStates.space = false;
+    inputStates.escape = false;
     
     //add the listener to the main, window object, and update the states
     window.addEventListener('keydown', (event) => {
@@ -497,7 +415,9 @@ function modifySettings() {
            inputStates.down = true;
         }  else if (event.key === " ") {
            inputStates.space = true;
-        }
+        }  else if (event.key === "Escape") {
+           inputStates.escape = true;
+         }
     }, false);
 
     //if the key will be released, change the states object 
@@ -512,13 +432,16 @@ function modifySettings() {
            inputStates.down = false;
         }  else if (event.key === " ") {
            inputStates.space = false;
+        }  else if (event.key === "Escape") {
+           inputStates.escape = false;
+           escapeReleased = true ;
         }
     }, false);
 }
 
 function printFPS(deltaTime){
     let FPS = document.querySelector("#FPS");
-    FPS.innerHTML = Math.floor(1000/deltaTime);
+    FPS.innerHTML =  engine.getFps().toFixed();
 }
 
 function printScore(tron, date){
@@ -526,8 +449,98 @@ function printScore(tron, date){
     tron.score = (date - timeStart) /1000;
     scorehtml.innerHTML = tron.score;
 }
-function printHScore(highScore){
-    let highScorehtml = document.querySelector("#HS");
-    highScorehtml.innerHTML = highScore;
+
+function printTIMEOUT(timeleft){
+    let temps = document.querySelector("#COOLDOWN");
+    let tmps = Math.floor(timeleft/1000);
+    if(tmps == 0){
+        temps.innerHTML = ' GO !';
+    }else{
+        temps.innerHTML = tmps;
+    }
+    
 }
 
+
+function pauseScreen(pause){
+    if(pause){
+        document.getElementById("pause").src = "images/PAUSE.png";
+        //document.getElementById("pause").innerHTML = '<img src="images/PAUSE.png" id="PAUSE" width="100%" height="100%"></img>'
+    }else{
+        document.getElementById("pause").src = "images/CLASSIC.png";
+    }
+}
+
+/*function gameOver(){
+    document.getElementById("pause").src = "images/GAMEOVER.png";
+    pause = true ;
+}*/
+
+
+//////////////////////////////////////  CONNEXION SERVEUR //////////////////////////////////////////////
+
+function updateWall(newWall){
+    if(newWall.username != username){
+        createWall(scene,newWall.fromX,newWall.fromZ,newWall.toX , newWall.toZ, false,newWall.color);
+    }
+}
+
+function updatePlayerNewPos(newPos){
+    if(listEnemis[newPos.username]!=undefined){
+        listEnemis[newPos.username].move(newPos.x,newPos.y,newPos.z)
+    }else if(username!=newPos.username){
+        updatePlayers(newPos);
+    }
+    
+
+}
+
+function updatePlayers(newPlayer){
+    if(newPlayer.username == username){
+        let tron = createTron(scene,newPlayer.x,newPlayer.y,newPlayer.z,newPlayer.orientation,newPlayer.color);
+    }else{
+        console.log("new ennemi : ",newPlayer)
+        let tron = scene.getMeshByName("tron");
+        resetTron(tron,true);
+        listEnemis[newPlayer.username] = createEnemie(scene,newPlayer.username,newPlayer.x,newPlayer.y,newPlayer.z,newPlayer.orientation,newPlayer.color);
+    }
+}
+
+
+function replaceBonus(unBonus){
+    if(bonus){
+        if(bonus[unBonus.numBonus]!=undefined){
+            bonus[unBonus.numBonus].dispose();
+            delete bonus[unBonus.numBonus];
+        }
+    }
+    bonusPos[unBonus.numBonus] = unBonus.position;
+}
+
+function getReady(){
+    gameWantReady = true ;
+    answeredReady = false;
+    let tron = scene.getMeshByName("tron");
+    document.getElementById("HOME").style.display = "none";
+    if(tron){
+        resetTron(tron,true);
+        document.getElementById("LOADING").style.display = "none";
+        document.getElementById("READY").style.display = "block";
+    }else{
+        document.getElementById("LOADING").style.display = "block";
+        document.getElementById("READY").style.display = "none";
+    }
+    document.getElementById("WAITING").style.display = "none";
+    document.getElementById("GAME").style.display = "none";
+ 
+}
+
+function starting(start){
+    document.getElementById("HOME").style.display = "none";
+    document.getElementById("LOADING").style.display = "none";
+    document.getElementById("READY").style.display = "none";
+    document.getElementById("WAITING").style.display = "none";
+    document.getElementById("GAME").style.display = "block";
+    gameWantReady = false ;
+    timeToStart = start;
+}

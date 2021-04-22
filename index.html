@@ -4,23 +4,85 @@
     <meta charset="UTF-8">
         <link rel="stylesheet" href="css/default.css">
         <script src="lib/babylon.max.js"></script>
-        <script type="module" src="js/main.js"></script>
+        <script src="js/main.js"></script>
+        <script src="js/client.js"></script>
+        <script src="js/tronEnemis.js"></script>
+        <script src="js/map.js"></script>
+        <script src="js/tron.js"></script>
+        <script src="/socket.io/socket.io.js"></script>
     </head>
     <body>
-        <img src="images/loading.gif" id="backgroundIMG">
-        
-        <canvas id="myCanvas"></canvas>
-        <!--<canvas id="camera" ></canvas>-->
-        
-        <div class="myGame">
-            <div id="infoText">
-		        <p>FPS : <span id="FPS"> NaN</span> /s</p>
-		        <p>SCORE : <span id="SCORE">NaN</span> seconds</p>
-                <p>HIGH SCORE : <span id="HS">NaN</span> seconds</p>
-                <img src="images/JUMP_DISABLE.png" id="JUMP" width="50" height="50">
-                <img src="images/BRAKE_DISABLE.png" id="BRAKE" width="50" height="50">
-            </div>         
+        <div id="HOME">
+            <img src="images/HOME_background.png" id="homeIMG" width="100%" height="100%">
+            <input class="input" type="text" id="username" name="name" placeholder="PSEUDO" required size="10">
+            <button class="button1" onclick="getUsername()">PLAY</button>
+            <div id="Settings">
+                <label class="container">  Planets
+                    <input type="checkbox" checked="checked" id="planets">
+                    <span class="checkmark"></span>
+                </label>
+                <label class="container">  Stars
+                    <input type="checkbox" checked="checked" id="stars">
+                    <span class="checkmark"></span>
+                </label>
+                <label class="container">  Transparency 
+                    <input type="checkbox" checked="checked" id="transparency">
+                    <span class="checkmark"></span>
+                </label>
+                <label class="container">  Effects
+                    <input type="checkbox" checked="checked" id="effects">
+                    <span class="checkmark"></span>
+                </label>
+                <label class="container">  Particles
+                    <input type="checkbox" checked="checked" id="particles">
+                    <span class="checkmark"></span>
+                </label>
+            </div>
         </div>
+
+        <div id="LOADING">
+            <img src="images/HOME_background.png" id="homeIMG" width="100%" height="100%">
+            <div id='indication'>LOADING THE GAME</div>
+        </div>
+
+        
+
+        <div id="READY">
+            <img src="images/HOME_background.png" id="homeIMG" width="100%" height="100%">
+            <div id='indication'>ARE YOU READY ?</div> 
+            <button class="button1" onclick="ready()">READY</button>
+        </div>
+
+        <div id="WAITING">
+            <img src="images/HOME_background.png" id="homeIMG" width="100%" height="100%">
+            <div id='indication'>WAITING FOR OTHERS PLAYERS</div>
+        </div>
+
+        <div id="GAME">
+            <img src="images/loading.gif" id="backgroundIMG">
+            <canvas id="myCanvas"></canvas>            
+            <div class="myGame">
+                <div id="infoText">
+                    <p>FPS : <span id="FPS"> NaN</span> /s</p>
+                    <p>SCORE : <span id="SCORE">NaN</span> seconds</p>
+                    <p>HIGH SCORE : <span id="HS">NaN</span> seconds</p>
+                    <p>BONUS : <span id="BONUS">0</span></p>
+                    <p>HIGH BONUS : <span id="HB">0</span></p>
+                    <img src="images/JUMP_DISABLE.png" id="JUMP" width="50" height="50">
+                    <img src="images/BRAKE_DISABLE.png" id="BRAKE" width="50" height="50">
+                    <img src="images/FIRE_DISABLE.png" id="FIRE" width="50" height="50">
+                    <img src="images/CLASSIC.png" id="pause" width="100%" height="500"></img>
+                </div>    
+                
+            </div>
+            <div id="TIMEOUT">
+                <div id="FILTRE"></div>
+                <div id='indication'>GAME STARTING IN</div>
+                <span id="COOLDOWN">NaN</span>
+            </div>
+        </div>
+
+        
         
     </body>
 </html>
