@@ -76,6 +76,7 @@ function startGame() {
                 document.getElementById("TIMEOUT").style.display = "block";
             }else{
                 document.getElementById("TIMEOUT").style.display = "none";
+                engine.resize();
                 let deltaTime = engine.getDeltaTime(); 
                 let tron = scene.getMeshByName("tron");
                 if(missileCast){
@@ -123,27 +124,6 @@ function ready(){
     document.getElementById("GAME").style.display = "none";
 }
 
-/*
-function doPause(){
-    if(escapeReleased){
-        if(inputStates.escape){
-            escapeReleased = false ;
-            pause = true ;
-            pauseScreen(pause);
-        }
-    }
-}
-function unPause(){ 
-    if(escapeReleased){
-        if (inputStates.escape){
-            pause = false;
-            escapeReleased = false;
-            pauseScreen(pause);
-        }
-    }
-}
-
-*/
 
 function checkBonus(scene){
     for(let i = 0 ; i < 5 ; i++){
@@ -210,7 +190,7 @@ function createWall(scene,fromX,fromZ , toX,toZ,mine,color){
 
 
 function createMissile(scene,from,tron){
-    let missile = BABYLON.MeshBuilder.CreateBox("missile", { width:0.5, height:1, size : 5 }, scene);
+    let missile = BABYLON.MeshBuilder.CreateBox("missile", { width:0.5, height:1, size : 20 }, scene);
     missile.frontVector = tron.frontVector;
     missile.position = new BABYLON.Vector3(from.x, 4, from.z); 
 
@@ -220,7 +200,7 @@ function createMissile(scene,from,tron){
     missileMaterial.emissiveColor = new BABYLON.Color3.Yellow;
     missileMaterial.intensity = 5;
     missile.material = missileMaterial
-    missile.speed = 0.3 ;
+    missile.speed = 0.2 ;
     
 
     missile.move = (deltaTime) => {
@@ -241,8 +221,6 @@ function destructWall(missile){
         if(walls[i]!=undefined){
             if(missiles.intersectsMesh(walls[i],true)){
                 walls[i].dispose();
-                missiles.dispose();
-                missileCast = false ;
                 walls[i] = undefined ;
                 return;
             }
@@ -365,7 +343,6 @@ function createFollowCamera(scene, target) {
 	camera.cameraAcceleration = 0.5; // how fast to move
 	camera.maxCameraSpeed = 100; // speed limit 
     camera.fov = 1;
-    //camera.viewport = new BABYLON.Viewport(0,0,1,1); 
     return camera;
 }
 
@@ -471,10 +448,6 @@ function pauseScreen(pause){
     }
 }
 
-/*function gameOver(){
-    document.getElementById("pause").src = "images/GAMEOVER.png";
-    pause = true ;
-}*/
 
 
 //////////////////////////////////////  CONNEXION SERVEUR //////////////////////////////////////////////
@@ -535,6 +508,7 @@ function getReady(){
  
 }
 
+
 function starting(start){
     document.getElementById("HOME").style.display = "none";
     document.getElementById("LOADING").style.display = "none";
@@ -542,5 +516,15 @@ function starting(start){
     document.getElementById("WAITING").style.display = "none";
     document.getElementById("GAME").style.display = "block";
     gameWantReady = false ;
+    let tron = scene.getMeshByName("tron");
+    if(tron){
+        resetTron(tron,true);
+    }
     timeToStart = start;
+}
+
+function deleteTron(name){
+    let enemis = scene.getMeshByName(name);
+    enemis.dispose();
+    delete listEnemis[name];
 }

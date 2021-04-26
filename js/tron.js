@@ -116,7 +116,7 @@ function createTron(scene,x,y,z,orientation,color) {
 
                     if(!tron.missileAvailable ){
                         let timeElapsedFire = currentDate - tron.missileTimer ;
-                        if(timeElapsedFire > 5000){
+                        if(timeElapsedFire > 10000){
                             tron.missileAvailable = true;
                             document.getElementById("FIRE").src = "images/FIRE_ENABLE.png";
                         }

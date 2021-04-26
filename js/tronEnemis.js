@@ -24,7 +24,7 @@ function createEnemie(scene,username,x,y,z,orientation,color) {
             tron.frontVector = new BABYLON.Vector3(0, 0, 0);
             tron.checkCollisions = false;
             tron.position = new BABYLON.Vector3(tron.x,tron.y,tron.z);
-       
+            tron.name = username;
             
             
             tron.move = (x,y,z) => {
@@ -32,5 +32,5 @@ function createEnemie(scene,username,x,y,z,orientation,color) {
             }
             console.log("creation du tron enemis " , username)
             return tron;
-    //    });
+    //  });
 }

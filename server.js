@@ -33,26 +33,31 @@ const app = express();
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
 
-http.listen(8082, () => {
-	console.log("Web server écoute sur http://localhost:8082");
+const PORT = process.env.PORT  || 8082
+
+http.listen(PORT, () => {
+	console.log("Web server écoute sur le port : " , PORT);
 })
 
 // Indicate where static files are located. Without this, no external js file, no css...  
 app.use(express.static(__dirname));    
 
 
+
 // routing
 app.get('/', (req, res) => {
   res.sendFile(__dirname + 'index.html');
-});
+}); 
+
+app.get('/socket.io/socket.io.js', (req, res) => {
+	res.sendFile(__dirname + 'socket.io/socket.io.js');
+  }); 
 
 // nom des joueurs connectés sur le chat
 var playerNames = {};
 var numbPlayer = 0;
 var nbPlayerConnected = 0;
 var listOfPlayers = {};
-var listOfObstacles = {};
-var listOfPositions= {};
 var nbWall =0;
 var bonus = [];
 var time =Date.now();
@@ -61,6 +66,7 @@ var nbUpdatesPerSeconds = 100;
 var calculHeartbeat = 20;
 var gameRestarting = true ;
 var playersReady = 0;
+var playerInGame = 0;
 
 function createAllBonus(){
 	for(let i = 0 ; i < 5 ; i++){
@@ -76,32 +82,10 @@ function createBonus(){
     return position;
 }
 
-
-
 function deleteBonus(i){
 	bonus[i]=createBonus();
 	io.emit('sendBonus', {'numBonus' : i , 'position' : bonus[i]});
-
 }
-
-/*
-//reset la game
-function resetGame(){
-	resetAllPos();
-}
-
-//reset les positions des joueurs
-function resetAllPos(){
-	for(let player in listOfPlayers)  {
-		listOfPlayers[player].x = playersPosStart[listOfPlayers[player].id%4].x; 
-		listOfPlayers[player].y = 3 ;
-        listOfPlayers[player].z = playersPosStart[listOfPlayers[player].id%4].z; 
-		io.emit('collapse',{'username' : player ,  'x' : listOfPlayers[player].x, 'y' : listOfPlayers[player].y, 'z' : listOfPlayers[player].z });
-	}
-}
-*/
-
-
 
 // LES CONNEXIONS ET ENVOIS DE DONNEE AUX CLIENTS
 
@@ -127,6 +111,8 @@ io.on('connection', (socket) => {
 		playerNames[username] = username;
 		console.log( socket.username ,' has connected !')
 		io.emit('updateusers', playerNames);
+		socket.emit('updatechat', 'SERVER', 'you have connected');
+		socket.broadcast.emit('updatechat', 'SERVER', username + ' has connected');
 		var player = new Player(numbPlayer,username);
 		numbPlayer += 1;
 		nbPlayerConnected ++;
@@ -142,36 +128,69 @@ io.on('connection', (socket) => {
 
 	socket.on('ready',(data) => {
 		console.log( data.username, ' is READY !')
+		io.emit('updatechat', 'SERVER', socket.username + ' is READY !');
 		listOfPlayers[data.username].ready = true ;
 		playersReady ++;
+		io.emit('updatechat', 'SERVER',  playersReady+'/'+nbPlayerConnected+' players ready');
+		console.log(playersReady,'/',nbPlayerConnected,' players ready');
 	});
 
 	socket.on('gameEnded',(data) => {
 		gameRestarting = true;
 		console.log( data.username, ' has ended the game !')
-		io.emit('getReady');
-		console.log( 'Asking to get Ready to players !')
+		playerInGame--;
+		socket.broadcast.emit('updatechat', 'SERVER', socket.username + ' lost.');
+		if(playerInGame<=1){
+			io.emit('getReady');
+		
+			console.log( 'Asking to get Ready to players !')
+			console.log(playersReady,'/',nbPlayerConnected,' players ready');
+		}else{ 
+			console.log("Game still running");
+		}
+		
 	});
+
+	// when the client emits 'sendchat', this listens and executes
+	socket.on('sendchat', (data) => {
+		// we tell the client to execute 'updatechat' with 2 parameters
+		io.sockets.emit('updatechat', socket.username, data);
+	});
+
 
 	// when the user disconnects.. perform this
 	socket.on('disconnect', () => {
 		// remove the username from global usernames list
 		delete playerNames[socket.username];
 		console.log( socket.username ,' has disconnected !')
-				// update list of users in chat, client-side
-		//io.emit('updateusers', playerNames);
+		gameRestarting = true;
+		// update list of users in chat, client-side
+		io.emit('updateusers', playerNames);	
+		io.emit('disposeTron', socket.username);
 		nbPlayerConnected-- ;
 		// Remove the player too
 		delete listOfPlayers[socket.username];		
-		//io.emit('updatePlayers',listOfPlayers);
+		io.emit('updatePlayers',listOfPlayers);
+		if(nbPlayerConnected>0){
+			playersReady=0;
+			playerInGame=0;
+			io.emit('getReady');
+			console.log( 'Asking to get Ready to players !');
+			
+			console.log(playersReady,'/',nbPlayerConnected,' players ready');
+			
+		} 
+		// echo globally that this client has left
+		socket.broadcast.emit('updatechat', 'SERVER', socket.username + ' has disconnected');
 	});
 });
 
 function checkEveryoneReady(){
-	console.log(playersReady,'/',nbPlayerConnected,' players ready');
+	
 	if(playersReady>=nbPlayerConnected){
-		let timeStart = Date.now()+5000; 
+		let timeStart = Date.now()+10000; 
 		io.emit('starting',timeStart);
+		playerInGame = playersReady;
 		console.log('EVERYONE READY !');
 		playersReady = 0;
 		gameRestarting = false ;
