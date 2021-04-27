@@ -323,7 +323,7 @@ function moveCursor(tron){
 function createCursor(tron){
     cursorPlayer = BABYLON.MeshBuilder.CreateSphere("cursor", {diameter: 5, segments: 32} , scene);
     cursorPlayer.position.x = tron.position.x;
-    cursorPlayer.position.y = 50;
+    cursorPlayer.position.y = 100;
     cursorPlayer.position.z = tron.position.z;
 }
 

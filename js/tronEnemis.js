@@ -3,10 +3,11 @@
 function createEnemie(scene,username,x,y,z,orientation,color) {
     //BABYLON.SceneLoader.ImportMesh("", "models/Tron/", "Tron_Motorcycle.babylon", scene,  (newMeshes, particleSystems, skeletons) => {
     //        let tron = newMeshes[0];
-            let tron = BABYLON.MeshBuilder.CreateBox(username, { width:3, height:3, size : 3}, scene);
+            let tron = BABYLON.Mesh.CreateSphere(username, 16, 5, scene);
             let tronMaterial = new BABYLON.StandardMaterial(username+"Material", scene);
-            tronMaterial.diffuseTexture = new BABYLON.Texture("models/Tron/Sphere_003_baked_EMIT.jpg");
-            tronMaterial.emissiveTexture = new BABYLON.Texture("models/Tron/Sphere_003_baked_EMIT.jpg");
+            //tronMaterial.diffuseTexture = new BABYLON.Texture("models/Tron/Sphere_003_baked_EMIT.jpg");
+            //tronMaterial.emissiveTexture = new BABYLON.Texture("models/Tron/Sphere_003_baked_EMIT.jpg");
+            tronMaterial.emissiveColor = new BABYLON.Color3(colorList[color].r,colorList[color].g,colorList[color].b);
             /*if(displayEffects){
                 tronMaterial.emissiveColor = new BABYLON.Color3(colorList[color].r,colorList[color].g,colorList[color].b);
                 tronMaterial.glow = new BABYLON.GlowLayer("glow"+toString(color), scene, {blurKernelSize : 150});
@@ -27,7 +28,7 @@ function createEnemie(scene,username,x,y,z,orientation,color) {
             tron.checkCollisions = false;
             tron.position = new BABYLON.Vector3(tron.x,tron.y,tron.z);
             tron.name = username;
-            
+            tron.scaling = new BABYLON.Vector3(1,1,2);
             
             tron.move = (x,y,z) => {
                 tron.position = new BABYLON.Vector3(x,y,z);

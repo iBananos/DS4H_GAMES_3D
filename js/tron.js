@@ -87,7 +87,7 @@ function createTron(scene,x,y,z,orientation,color) {
 
             // mouvement du tron en fonction de plusieurs facteur, gère également les collisions avec les autres murs
             tron.move = (deltaTime,inputs,walls,bonus) => {
-                if(true){
+                if(tron.inGame){
                     let currentDate = Date.now();
                     // si le saut n'est pas disponible
                     if(!tron.jumpAvailable ){
