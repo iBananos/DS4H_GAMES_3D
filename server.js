@@ -116,6 +116,7 @@ io.on('connection', (socket) => {
 		createAllBonus();
 		io.emit('startGame',username);
 		console.log( 'Asking to get Ready to players !')
+		playersReady=0;
 		io.emit('getReady',);
 		gameRestarting = true;
 		io.emit('updatePlayers',{'username' : username , 'x' : player.x,'y' : player.y,'z' : player.z ,'orientation' : player.orientation,'color' : player.color});
