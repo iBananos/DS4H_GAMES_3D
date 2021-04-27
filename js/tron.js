@@ -112,27 +112,29 @@ function createTron(scene,x,y,z,orientation,color) {
                     }
 
                     // si le brake est indisponible
-                    if(!tron.brakeAvailable){
-                        let timeElapsedBrake = currentDate - tron.brakeTimer ;
-                        if(tron.braking && ( timeElapsedBrake > 2000)){
-                            tron.speed = tron.basedSpeed;
-                            tron.braking = false ;
-                        }if( timeElapsedBrake > 7000){
-                            tron.brakeAvailable = true;
-                            document.getElementById("BRAKE").src = "images/BRAKE_ENABLE.png";
-                        }
-                        // si le brake est disponile
-                    }else{
-                        if( inputs.down){
-                            tron.brake.play();
-                            tron.speed = tron.basedSpeed/2;
-                            tron.braking = true; 
-                            tron.brakeAvailable = false;
-                            document.getElementById("BRAKE").src = "images/BRAKE_DISABLE.png";
-                            tron.brakeTimer = currentDate;
+                    if(tron.inGame){
+                        if(!tron.brakeAvailable){
+                                let timeElapsedBrake = currentDate - tron.brakeTimer ;
+                                if(tron.braking && ( timeElapsedBrake > 2000)){
+                                    tron.speed = tron.basedSpeed;
+                                    tron.braking = false ;
+                                }if( timeElapsedBrake > 7000){
+                                    tron.brakeAvailable = true;
+                                    document.getElementById("BRAKE").src = "images/BRAKE_ENABLE.png";
+                                }
+                        
+                            // si le brake est disponile
+                        }else{
+                            if( inputs.down){
+                                tron.brake.play();
+                                tron.speed = tron.basedSpeed/2;
+                                tron.braking = true; 
+                                tron.brakeAvailable = false;
+                                document.getElementById("BRAKE").src = "images/BRAKE_DISABLE.png";
+                                tron.brakeTimer = currentDate;
+                            }
                         }
                     }
-
                     // missile indiponible
                     if(!tron.missileAvailable ){
                         let timeElapsedFire = currentDate - tron.missileTimer ;
