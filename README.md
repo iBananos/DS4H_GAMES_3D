@@ -4,6 +4,8 @@ Je viens de créer un jeu pour un cours en Master en informatique.
 
 Lien direct vers le jeu via HEROKU: https://tronfever.herokuapp.com/
 
+Video Demo du jeu : https://github.com/iBananos/DS4H_GAMES_3D/blob/main/video_demo.mkv (à télécharger)
+
 Vous trouverez ici le développement de mon jeu 3D appelé TronFever inspiré du film TRON, c'est un jeu de style SNAKE, le mode multijoueur est disponible.
 
 Règle du jeu:
