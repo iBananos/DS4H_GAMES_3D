@@ -1,19 +1,10 @@
+// ICI UNE VERSION TRES BASIQUE ET NAIVE D'UN SERVEUR POUR LE MULTIJOUEUR DE TRONFEVER
 
 
-class Obstacle {
-    constructor(Xi, Yi, Xtaille, Ytaille, vitesseX, vitesseY,color,id) {
-        this.x = Xi;
-        this.y = Yi;
-        this.Xtaille = Xtaille;
-        this.Ytaille = Ytaille;
-        this.vitesseX = vitesseX;
-        this.vitesseY = vitesseY;
-        this.color = color;
-		this.id = id;
-    }
-}
+// Données des joueurs en fonction de leur ordre d'arrivé
 let playersPosStart = [{'x' : 190, 'z' :0, 'orientation' : -Math.PI/2,'color':0},{'x' : 0, 'z' :190, 'orientation' : Math.PI,'color':1},{'x' : -190, 'z' :0, 'orientation' : Math.PI/2,'color':2},{'x' : 0, 'z' :-190, 'orientation' : 0,'color':3}]
 
+// Classe joueur
 class Player {
     constructor(id, name) {
         this.x = playersPosStart[id%4].x;
@@ -28,16 +19,17 @@ class Player {
     }
 }
 
+// Paramètre serveur 
 const express = require('express')
 const app = express();
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
-
 const PORT = process.env.PORT  || 8082
+
 
 http.listen(PORT, () => {
 	console.log("Web server écoute sur le port : " , PORT);
-})
+});
 
 // Indicate where static files are located. Without this, no external js file, no css...  
 app.use(express.static(__dirname));    
@@ -49,11 +41,12 @@ app.get('/', (req, res) => {
   res.sendFile(__dirname + 'index.html');
 }); 
 
+
 app.get('/socket.io/socket.io.js', (req, res) => {
 	res.sendFile(__dirname + 'socket.io/socket.io.js');
   }); 
 
-// nom des joueurs connectés sur le chat
+// Datas du serveur pour la gestion de la partie et des connexions 
 var playerNames = {};
 var numbPlayer = 0;
 var nbPlayerConnected = 0;
@@ -62,12 +55,12 @@ var nbWall =0;
 var bonus = [];
 var time =Date.now();
 var oldTime = time;
-var nbUpdatesPerSeconds = 100;
 var calculHeartbeat = 20;
 var gameRestarting = true ;
 var playersReady = 0;
 var playerInGame = 0;
 
+// Création de tout les bonus 
 function createAllBonus(){
 	for(let i = 0 ; i < 5 ; i++){
         bonus[i] = createBonus();
@@ -75,6 +68,7 @@ function createAllBonus(){
     }
 }
 
+// Création d'un bonus 
 function createBonus(){
     let pos = Math.floor(Math.random() * 199);  
     let rad = Math.floor(Math.random() * 360) * Math.PI/180;  
@@ -82,13 +76,13 @@ function createBonus(){
     return position;
 }
 
+// Recrée un bonus et l'envoie aux clients 
 function deleteBonus(i){
 	bonus[i]=createBonus();
 	io.emit('sendBonus', {'numBonus' : i , 'position' : bonus[i]});
 }
 
-// LES CONNEXIONS ET ENVOIS DE DONNEE AUX CLIENTS
-
+// LES CONNEXIONS ET ENVOIS DE DONNEES AUX CLIENTS
 io.on('connection', (socket) => {
     // RECUPERE LES POSITIONS ET LES REENVOIS AUX JOUEURS
     socket.on('sendpos', (data) => {
@@ -101,11 +95,13 @@ io.on('connection', (socket) => {
         io.emit('updateWall', data);
 	});
 
+	// RECUPERE LE BONUS A RECREER
 	socket.on('deleteBonus', (i) => {
 		deleteBonus(i);
 	});
 
-	// when the client emits 'adduser', this listens and executes
+
+	// AJOUTE UN JOUEUR ET ENVOIS SES DATAS AUX AUTRES CLIENTS
 	socket.on('adduser', (username) => {
 		socket.username = username;
 		playerNames[username] = username;
@@ -123,9 +119,9 @@ io.on('connection', (socket) => {
 		io.emit('getReady',);
 		gameRestarting = true;
 		io.emit('updatePlayers',{'username' : username , 'x' : player.x,'y' : player.y,'z' : player.z ,'orientation' : player.orientation,'color' : player.color});
-		//resetGame();
 	});
 
+	// UN JOUEUR EST READY
 	socket.on('ready',(data) => {
 		console.log( data.username, ' is READY !')
 		io.emit('updatechat', 'SERVER', socket.username + ' is READY !');
@@ -135,12 +131,13 @@ io.on('connection', (socket) => {
 		console.log(playersReady,'/',nbPlayerConnected,' players ready');
 	});
 
+	// UN JOUEUR A PERDU, CHECK SI IL RESTE UN JOUEUR EN JEU 
 	socket.on('gameEnded',(data) => {
 		gameRestarting = true;
 		console.log( data.username, ' has ended the game !')
 		playerInGame--;
-		socket.broadcast.emit('updatechat', 'SERVER', socket.username + ' lost.');
-		if(playerInGame<=1){
+		io.emit('updatechat', 'SERVER', socket.username + ' lost with : ' + data.points + ' points.');
+		if(playerInGame<=0){
 			io.emit('getReady');
 		
 			console.log( 'Asking to get Ready to players !')
@@ -185,6 +182,7 @@ io.on('connection', (socket) => {
 	});
 });
 
+// CHECK SI TOUT LE MONDE EST PRET AVANT DE LANCER LA PARTIE 
 function checkEveryoneReady(){
 	
 	if(playersReady>=nbPlayerConnected){
@@ -197,12 +195,14 @@ function checkEveryoneReady(){
 	}
 }
 
+// UN TIMER
 function timer(currentTime) {
 	var delta = currentTime - oldTime;
 	oldTime = currentTime;
 	return delta/1000;
 }
 
+// BOUCLE SERVEUR
 setInterval(()=> {
 	time = Date.now();
 	delta = timer(time);

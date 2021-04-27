@@ -1,3 +1,6 @@
+
+
+// crée le tron allié 
 function createTron(scene,x,y,z,orientation,color) {
     BABYLON.SceneLoader.ImportMesh("", "models/Tron/", "Tron_Motorcycle.babylon", scene,  (newMeshes, particleSystems, skeletons) => {
             let tron = newMeshes[0];
@@ -28,36 +31,46 @@ function createTron(scene,x,y,z,orientation,color) {
             tron.highBonus = 0;
             tron.score = 0;
             tron.highScore = 0;
+            tron.bonusSound = new BABYLON.Sound("BONUS", "musique/bonus.wav", scene, null, {
+                volume : 0.1
+            });
 
-
-
-            // JUMP SET UP
+            // JUMP SETUP
             tron.jumpAvailable = false;
             tron.jumping = false ; 
             tron.jumpTimer = Date.now(); 
+            tron.jump = new BABYLON.Sound("JUMP", "musique/jump.wav", scene, null, {
+                volume : 0.1
+            });
 
-
-            // BRAKE SET UP
+            // BRAKE SETUP
             tron.brakeAvailable = false;
             tron.braking = false;
             tron.brakeTimer = Date.now();
+            tron.brake = new BABYLON.Sound("BRAKE", "musique/brake.wav", scene, null, {
+                volume : 0.1
+            });
 
-            // MISSILE SET UP
+            // MISSILE SETUP
             tron.missileAvailable = false;
             tron.fire = false;
             tron.missileTimer = Date.now();
-
+            tron.laser = new BABYLON.Sound("SHOT", "musique/laser.wav", scene, null, {
+                volume : 0.1
+            });
             tron.position = new BABYLON.Vector3(x, y, z); 
             tron.scaling = new BABYLON.Vector3(1  ,1, 1);
             tron.name = "tron";
             tron.nbWall= 0;
             
             
-
+            
+            tron.inGame = true;
             tron.lastPos = new BABYLON.Vector3(tron.x-3*tron.frontVector.x, tron.y, tron.z-3*tron.frontVector.z);
             tron.loose = false;
             createCursor(tron);
 
+            // pour la construction des murs 
             tron.wall = (scene,inputs) => {
                 if(!tron.jumping && !tron.loose){
                     let newPos = new BABYLON.Vector3(tron.position.x-4*tron.frontVector.x, tron.position.y, tron.position.z-4*tron.frontVector.z);
@@ -72,9 +85,11 @@ function createTron(scene,x,y,z,orientation,color) {
                 
             }
 
+            // mouvement du tron en fonction de plusieurs facteur, gère également les collisions avec les autres murs
             tron.move = (deltaTime,inputs,walls,bonus) => {
-                if(true ){
+                if(true){
                     let currentDate = Date.now();
+                    // si le saut n'est pas disponible
                     if(!tron.jumpAvailable ){
                         let timeElapsedDuringJump = currentDate - tron.jumpTimer ;
                         if(tron.jumping && ( timeElapsedDuringJump < 1000)){
@@ -86,6 +101,7 @@ function createTron(scene,x,y,z,orientation,color) {
                             tron.jumpAvailable = true;
                             document.getElementById("JUMP").src = "images/JUMP_ENABLE.png";
                         }
+                        //si le saut est disponible
                     }else{
                         if(inputs.space){
                             tron.jumpAvailable = false;
@@ -95,6 +111,7 @@ function createTron(scene,x,y,z,orientation,color) {
                         }
                     }
 
+                    // si le brake est indisponible
                     if(!tron.brakeAvailable){
                         let timeElapsedBrake = currentDate - tron.brakeTimer ;
                         if(tron.braking && ( timeElapsedBrake > 2000)){
@@ -104,8 +121,10 @@ function createTron(scene,x,y,z,orientation,color) {
                             tron.brakeAvailable = true;
                             document.getElementById("BRAKE").src = "images/BRAKE_ENABLE.png";
                         }
+                        // si le brake est disponile
                     }else{
                         if( inputs.down){
+                            tron.brake.play();
                             tron.speed = tron.basedSpeed/2;
                             tron.braking = true; 
                             tron.brakeAvailable = false;
@@ -114,24 +133,29 @@ function createTron(scene,x,y,z,orientation,color) {
                         }
                     }
 
+                    // missile indiponible
                     if(!tron.missileAvailable ){
                         let timeElapsedFire = currentDate - tron.missileTimer ;
                         if(timeElapsedFire > 10000){
                             tron.missileAvailable = true;
                             document.getElementById("FIRE").src = "images/FIRE_ENABLE.png";
                         }
+                        // missile disponible
                     }else{
                         if(inputs.up){
                             let newPos = new BABYLON.Vector3(tron.position.x, 0, tron.position.z);
                             createMissile(scene , newPos , tron);
                             tron.missileAvailable = false;
+                            tron.laser.play();
                             document.getElementById("FIRE").src = "images/FIRE_DISABLE.png";
                             tron.missileTimer = currentDate;
                         }
-                    }                    
+                    }            
+                    // check la collision avec les bonus        
                     for(let i = 0 ; i < bonus.length ; i++){
                         if(bonus[i]!=undefined){
                             if(tron.intersectsMesh(bonus[i],true)){
+                                tron.bonusSound.play();
                                 console.log("BONUS" , i);
                                 bonusTron(tron);
                                 delete bonusPos[i]; 
@@ -144,23 +168,22 @@ function createTron(scene,x,y,z,orientation,color) {
                         }
                     }
                     let dist = Math.pow((Math.pow(tron.position.x,2)+Math.pow(tron.position.z,2)),0.5)
+                    // check si le joueur à dépassé l'arene
                     if(dist>200){
-                        //resetTron(tron,false);
-                        send('gameEnded',{'username':username});
+                        stopTron(tron)
                     }
+                    //check si le joueur percute un mur
                     for(let i = 0 ; i < walls.length ; i++){
                         if(walls[i]!=undefined){
                             if(tron.intersectsMesh(walls[i],true)){
                                 console.log("COLLAPSE" , i);
-                                //resetTron(tron,false);
-                                send('gameEnded',{'username':username});
+                                stopTron(tron)
                                 break;
                             }
                         }
                     }
-                    //if(inputs.up){
                     tron.moveWithCollisions(tron.frontVector.multiplyByFloats(tron.speed*deltaTime, tron.speed*deltaTime, tron.speed*deltaTime));
-                    //}
+                    // verifie si le joueur tourne gauche/droite
                     if(inputs.left) {
                         tron.rotation.y -= 0.02*deltaTime/10;
                         if(tron.rotation.z + 0.02*deltaTime/10 < tron.baseRotationZ+0.8){
@@ -190,16 +213,20 @@ function createTron(scene,x,y,z,orientation,color) {
                     }
                 
                 }
+                // envoie au serveur la position 
                 let data = {'username':username,'x' : tron.position.x, 'y' : tron.position.y , 'z' : tron.position.z, 'orientation' : tron.baseRotationY}
                 send("sendpos",data);
             }
+            // si le client à choisit d'afficher les particules
             if(displayParticles) {particleTron(tron);}
             return tron;
         });
 }
 let zMovement = 5;
 
-
+// crée l'animation lorsque le joueur obtient un bonus 
+// grandement inspiré d'un playground mais énormément modifié aussi : 
+// https://playground.babylonjs.com/#LNRAI3
 function createBonusAnimation(tron){
     const particleSystem = new BABYLON.ParticleSystem("particles", 100);
 
@@ -241,19 +268,16 @@ function createBonusAnimation(tron){
     particleSystem.targetStopDuration = 1;
 }
 
+// permet le reset de la game et des informations du tron 
 function resetTron(tron,reseting){
+    tron.inGame = true;
     tron.position = new BABYLON.Vector3(tron.x, tron.y, tron.z);
     tron.rotation.y = tron.baseRotationY
     tron.rotation.z = tron.baseRotationZ
     tron.speed = 0.05;
     tron.basedSpeed = 0.05;
     tron.frontVector = new BABYLON.Vector3(Math.sin(tron.baseRotationY), 0, Math.cos(tron.baseRotationY));
-    //if(!reseting){
-        //gameOver(tron);
-    //}else{
-    //    restartingGame();
-    //}
-    
+
     tron.loose = true ;
     tron.nbWall=0;
     if(tron.highScore < tron.score){
@@ -272,15 +296,29 @@ function resetTron(tron,reseting){
     
 }
 
+// ajoute un bonus a tron 
 function bonusTron(tron){
     tron.bonus += 1;
     printBonus(tron.bonus);
 }
 
+// le tron est en JUMP
 function jumpTron(tron){
     tron.jumping = true ;
+    tron.jump.play();
 }
 
+function stopTron(tron){
+    if(tron.inGame){
+        send('gameEnded',{'username':username , 'points' : tron.bonus});
+        tron.loose = true;
+        tron.inGame = false ;
+        tron.position = new BABYLON.Vector3(0,50,0);
+        tron.speed = 0 ;
+    }
+}
+
+// permet de calculer la trajectoire du tron lors du saut
 function fallTron(tron, time){
     if(time<250 || time >750){
         tron.rotation.x -=0.008;
@@ -290,20 +328,27 @@ function fallTron(tron, time){
     tron.position.y = (-1/50000*Math.pow(time,2)+1/50*time +2);
 }
 
+// affiche le meilleur score
 function printHScore(highScore){
     let highScorehtml = document.querySelector("#HS");
     highScorehtml.innerHTML = highScore;
 }
 
+// affiche le nombre de bonus 
 function printBonus(bonus){
     let bonushtml = document.querySelector("#BONUS");
     bonushtml.innerHTML = bonus;
 }
+
+// affiche le meilleur score en terme de bonus 
 function printHBonus(highBonus){
     let highBonushtml = document.querySelector("#HB");
     highBonushtml.innerHTML = highBonus;
 }
 
+// crée l'animation lorsque le joueur avance
+// grandement inspiré d'un playground mais énormément modifié aussi : 
+// https://playground.babylonjs.com/#LNRAI3
 function particleTron(tron){
     
     // Create a particle system

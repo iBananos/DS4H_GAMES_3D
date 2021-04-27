@@ -1,10 +1,9 @@
+
+// méthode centrale de la création de la map en fonction des choix de l'utilisateur
 function createMAP(scene){
     createLights(scene);
     if(displayStars){ space(scene); }
-    //stadium = createStadium(scene);
-    //sphere = createSphere(scene);
     ground = createGround(scene);
-    title = createTitle(scene);
     ring = createRing(scene)
     if(displayPlanets){
         for(let i = 0 ; i < 7 ; i++){
@@ -16,7 +15,6 @@ function createMAP(scene){
 
 let stadium;
 let ground;
-let title;
 let sphere;
 let ring;
 let sRing;
@@ -25,6 +23,8 @@ var domeRadius =5000;
 let vectors = [[300,0,20],[600,0,50],[900,0,40],[-1200,0,400],[1500,0,300],[1800,0,100],[2100,0,100]];
 let planetes = ["MERCURE","VENUS","MARS","JUPITER","SATURNE","URANUS","NEPTUNE"];
 
+// la sphere de particule à été récupérée via un babylon Playground, puis à été modifié pour convenir a TronFever
+// impossible de remettre la main dessus
 var myStartPositionFunction = function (worldMatrix, positionToUpdate) {
 	var v3 = getCart(domeRadius);
 	BABYLON.Vector3.TransformCoordinatesFromFloatsToRef(v3.x, v3.y, v3.z, worldMatrix, positionToUpdate);
@@ -97,7 +97,7 @@ function space(scene){
 	ps.start();
 }
 
-
+// créer les planetes du systeme solaire
 function createPlanet(scene,num){
     var planet = BABYLON.Mesh.CreateSphere("planet"+toString(num), 16, vectors[num][2], scene);
 	var planetMaterial = new BABYLON.StandardMaterial("planetSurface"+toString(num), scene);
@@ -110,12 +110,11 @@ function createPlanet(scene,num){
 
     planet.move = (alpha,num) => {
         planet.position = new BABYLON.Vector3(planet.dist * Math.sin(alpha+num),  0, planet.dist * Math.cos(alpha+num));
-        
-        //planet.rotation.y += .03;
     }
     return planet;
 }
 
+// deplace toutes les planetes
 function moveAllPlanet(alpha){
     for(let i = 0 ; i < planet.length ; i++){
         if(planet[i]!=undefined){
@@ -125,6 +124,7 @@ function moveAllPlanet(alpha){
     sRing.move(alpha)
 }
 
+// crée l'anneau de saturne
 function createSaturnRing(scene){
     var ring = BABYLON.MeshBuilder.CreateTorus("torus", {tessellation:32 ,thickness: 80, diameter: vectors[4][2]*2});
     ring.scaling = new BABYLON.Vector3(1,0.1,1)
@@ -142,19 +142,7 @@ function createSaturnRing(scene){
     return ring
 }
 
-function createTitle(scene){
-    var title = BABYLON.MeshBuilder.CreateBox("title", { width:400, height:0.1, size: 400}, scene);
-    title.checkCollisions = false;
-    title.position = new BABYLON.Vector3(0, 300, 0); 
-    title.rotation.y = -Math.PI/2
-    let titleMaterial = new BABYLON.StandardMaterial("titleMaterial", scene);
-    titleMaterial.diffuseTexture  = new BABYLON.Texture("images/TRON FEVER.png");
-    titleMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
-    
-    title.material = titleMaterial
-    return title;
-}
-
+// crée un sol très bas pour améliorer la vue de la minimap
 function createGround(scene) {
     var ground = BABYLON.MeshBuilder.CreateSphere("title", {diameter: 400, segments: 64}, scene);
         ground.position = new BABYLON.Vector3(0, -1000, 0); 
@@ -165,60 +153,16 @@ function createGround(scene) {
         ground.material = groundMaterial
         ground.name = "ground";
         ground.checkCollisions = false;
-    /*
-    const ground = BABYLON.SceneLoader.ImportMesh("Plane", "models/TronFloor/", "GroundSansObstacle.babylon", scene,  (newMeshes, particleSystems, skeletons) => {
-        let ground = newMeshes[0];
-        ground.checkCollisions = true;
-        ground.position = new BABYLON.Vector3(0, 0, 0); 
-        ground.scaling = new BABYLON.Vector3(9  ,9, 9);
-        ground.name = "ground";
-        ground.checkCollisions = false;
-        
-    return ground;
-    });
-    */
    return ground;
 }
 
-function createStadium(scene) {
-    const stadium = BABYLON.SceneLoader.ImportMesh("Roof Shade", "models/TronStadium/", "TronArena.babylon", scene,  (newMeshes, particleSystems, skeletons) => {
-        let stadium = newMeshes[0];
-        stadium.checkCollisions = true;
-        stadium.position = new BABYLON.Vector3(0, 0, 0); 
-        stadium.scaling = new BABYLON.Vector3(4  ,2, 3);
-        stadium.name = "stadium";
-        stadium.checkCollisions = true;
-    return stadium;
-    });
-}
 
-function createSphere(scene) {
-var sphere = BABYLON.Mesh.CreateSphere("sphere", {diameter: 100, segments: 64/*, sideOrientation: BABYLON.Mesh.DOUBLESIDE*/}, scene);
-    sphere.checkCollisions = false;
-    sphere.position = new BABYLON.Vector3(0, 0, 0); 
-    sphere.name = "sphere";
-
-
-    let sphereMaterial = new BABYLON.StandardMaterial("sphereMaterial", scene);
-    sphereMaterial.diffuseColor  = new BABYLON.Color3.White;
-    sphereMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
-    sphere.material = sphereMaterial;
-    sphere.checkCollisions = false;
-
-
-    return sphere;
-}
-
-
+// crée l'anneau délimitant la zone de jeu 
 function createRing(scene) {
     var ring = BABYLON.MeshBuilder.CreateTorus("ringg", {tessellation:256 ,thickness: 2, diameter: 400});
     ring.scaling = new BABYLON.Vector3(1,1,1)
     var ringMaterial = new BABYLON.StandardMaterial("ring", scene);
-    /*ringMaterial.emissiveColor = new BABYLON.Color3.White;
-    ringMaterial.glow = new BABYLON.GlowLayer("glowRing", scene, {blurKernelSize : 30});
-    ringMaterial.glow.intensity = 0.5;
-    ringMaterial.glow.addIncludedOnlyMesh(ring);
-    */ring.material = ringMaterial;
+    ring.material = ringMaterial;
     ring.position = new BABYLON.Vector3(0,0,0)
     ring.material.diffuseTexture = new BABYLON.Texture("images/RAINBOW.jpg");
     ring.material.specularColor = new BABYLON.Color3(0, 0, 0);
@@ -228,7 +172,7 @@ function createRing(scene) {
     }
 
 
-
+// crée les lumières
 function createLights(scene) {
     let light1 = new BABYLON.DirectionalLight("dir1", new BABYLON.Vector3(-1, -1, -1), scene);
     light1.position = new BABYLON.Vector3(-200, 200, -200);

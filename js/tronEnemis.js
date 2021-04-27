@@ -1,3 +1,5 @@
+// méthode de création d'un tron enemie, malheuresement n'ayant pas réussis à implémenter l'assetManager 
+// les enemies seront temporairement des cubes, le temps de l'implémentation 
 function createEnemie(scene,username,x,y,z,orientation,color) {
     //BABYLON.SceneLoader.ImportMesh("", "models/Tron/", "Tron_Motorcycle.babylon", scene,  (newMeshes, particleSystems, skeletons) => {
     //        let tron = newMeshes[0];

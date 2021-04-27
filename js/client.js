@@ -5,13 +5,10 @@ let displayTransparency;
 let displayEffects;
 let displayParticles;
 let conversation, data, datasend, users;
-
 let artificialLatencyDelay = 10;
 let socket;
 
-// on load of page
-//window.onload = init();
-
+// UNE FOIS QUE LE CLIENT A FOURNIS SON USERNAME PREPARATION DE LA MAP AVEC LES DONNEES CHOSIS
 function getUsername(){
   username = document.getElementById("username").value;
   displayPlanets = document.getElementById("planets").checked;
@@ -27,6 +24,7 @@ function getUsername(){
   }
 }
 
+// INIT DU JEU 
 function init() {
 
   // initialize socket.io client-side
@@ -75,10 +73,12 @@ function sendMessage() {
     updatePlayers(newPlayer);
   });
 
+  // un mur est a construire
   socket.on("updateWall", (wall) => {
     updateWall(wall);
   });
 
+  // supprimer un tron car déconnexion d'un joueur
   socket.on("disposeTron", (data) =>{
     deleteTron(data.username);
   });
@@ -98,26 +98,29 @@ function sendMessage() {
     }
   });
 
+  // update la position d'un joueur
   socket.on("updatePos", (newPos) => {
     updatePlayerNewPos(newPos);
     //console.log(newPos);
   });
 
+  // un bonus est à remplacer
   socket.on("sendBonus", (unBonus) => {
     replaceBonus(unBonus);
     //console.log(newPos);
   });
 
-
+  // demande du serveur à mettre "READY"
   socket.on("getReady", () => {
     getReady();
   });
 
+  // début de la game dans X secondes
   socket.on("starting", (startTime) => {
     starting(startTime);
   });
 
-  // we start the Game
+  // instanciation de la partie
   socket.on("startGame",(name) =>{
     if(username == name){
       document.getElementById("HOME").style.display = "none";
@@ -127,13 +130,11 @@ function sendMessage() {
       document.getElementById("WAITING").style.display = "none";
       document.getElementById("GAME").style.display = "none";
       startGame();
-    }else{
-      //restartGame();
     }
   });
 }
 
-// PERMET D'ENVOYER SUR WEBSOCKET en simulant une latence (donnée par la valeur de delay)
+// PERMET D'ENVOYER SUR WEBSOCKET 
 function send(typeOfMessage, data) {
   setTimeout(() => {
       socket.emit(typeOfMessage, data)
